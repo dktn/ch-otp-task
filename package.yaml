@@ -1,0 +1,36 @@
+name: ch-opt-task
+version: '0.1.0.0'
+category: research
+author: Adam Szlachta
+maintainer: adam.szlachta@gmail.com
+copyright: Apache 2.0
+license: BSD3
+github: dktn/ch-opt-task
+extra-source-files:
+- README.md
+dependencies:
+- protolude
+- monad-loops
+- optparse-applicative
+- random
+- time
+- binary
+- binary-orphans
+- distributed-process
+- distributed-process-simplelocalnet
+default-extensions:
+- NoImplicitPrelude
+- OverloadedStrings
+- DeriveGeneric
+- DeriveAnyClass
+executables:
+  ch-opt-task:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -O1 # O2
+    dependencies:
+    - base
