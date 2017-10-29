@@ -4,26 +4,24 @@ import           Protolude
 
 import           Control.Distributed.Process (NodeId)
 import           Data.Binary
-import           GHC.Generics
-import           Options.Applicative
 
 type Seed = Int
 type Duration = Int
 
 data HostConfig = HostConfig
-    { host :: Text
-    , port :: Text
+    { _host :: Text
+    , _port :: Text
     } deriving (Show)
 
 data MasterConfig = MasterConfig
-    { sendDuration :: Duration
-    , waitDuration :: Duration
-    , seed         :: Seed
+    { _sendDuration :: Duration
+    , _waitDuration :: Duration
+    , _seed         :: Seed
     } deriving (Show, Generic, Binary)
 
 data WorkerConfig = WorkerConfig
-    { config  :: MasterConfig
-    , nodeIds :: [NodeId]
+    { _config  :: MasterConfig
+    , _nodeIds :: [NodeId]
     } deriving (Show, Generic, Binary)
 
 data Options
