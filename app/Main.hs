@@ -38,9 +38,10 @@ master backend masterConfig@(MasterConfig sendDuration waitDuration seed) nodeId
     say $ "Processes: " <> show processIds
     say $ "Sending for " <> show sendDuration <> " second(s)"
     liftIO $ threadDelay sendDurationMs
-    say $  "Waiting for " <> show waitDuration <> " second(s)"
+    say $ "Waiting for " <> show waitDuration <> " second(s)"
     liftIO $ threadDelay waitDurationMs
     SL.terminateAllSlaves backend
+    say "Slaves terminated"
 
 remoteTable :: RemoteTable
 remoteTable = Main.__remoteTable initRemoteTable
