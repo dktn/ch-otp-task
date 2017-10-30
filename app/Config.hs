@@ -17,6 +17,8 @@ data MasterConfig = MasterConfig
     { _sendDuration :: Duration
     , _waitDuration :: Duration
     , _seed         :: Seed
+    , _msgDelay     :: Int
+    , _msgBuffer    :: Int
     } deriving (Show, Generic, Binary)
 
 data WorkerConfig = WorkerConfig

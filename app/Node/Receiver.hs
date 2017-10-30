@@ -28,30 +28,28 @@ data ReceiverState = ReceiverState
     , _pqueueSize      :: !Int
     , _valuePQueue     :: !ValuePQueue
     , _finishedCount   :: !Int
+    , _skippedMsg      :: !Integer
     } deriving (Show)
 
 -- IDEAS:
 -- - multiple queues
 -- - timer message
 
-maxPQSize :: Int
-maxPQSize = 5000
-
 initialReceiverState :: ReceiverState
-initialReceiverState = ReceiverState (Result 0.0 0) 0 0 PQ.empty 0
+initialReceiverState = ReceiverState (Result 0.0 0) 0 0 PQ.empty 0 0
 
 showResult :: Result -> String
 showResult result = "<" <> show (_currentCount result) <> ", " <> show (_currentSum result) <> ">"
 
-handleValueMessage :: ReceiverState -> ValueMessage -> Process ReceiverState
-handleValueMessage state@(ReceiverState result@(Result !curSum !count) _lastTs pqsize !pq fc) msg@(ValueMessage newVal nodeTs@(NodeTimestamp newTs _nodeId)) =
+handleValueMessage :: Int -> ReceiverState -> ValueMessage -> Process ReceiverState
+handleValueMessage !msgBuffer state@(ReceiverState result@(Result !curSum !count) _lastTs pqsize !pq !fc !sk) msg@(ValueMessage newVal nodeTs@(NodeTimestamp newTs _nodeId)) =
     -- say $ "Received message: " <> show msg
-    if pqsize < maxPQSize
+    if pqsize < msgBuffer
         then do
             -- say "Add to pq"
             let !pq' = PQ.insert msg nodeTs newVal pq
                 !newPQSize = pqsize + 1
-                !newState = ReceiverState result newTs newPQSize pq' fc
+                !newState = ReceiverState result newTs newPQSize pq' fc sk
             return newState
         else
             case PQ.minView pq of
@@ -63,11 +61,12 @@ handleValueMessage state@(ReceiverState result@(Result !curSum !count) _lastTs p
                                 !newCount = count + 1
                                 !newSum = curSum + fromIntegral newCount * val
                                 !newResult = Result newSum newCount
-                                !newState = ReceiverState newResult newTs pqsize pq'' fc
+                                !newState = ReceiverState newResult newTs pqsize pq'' fc sk
                             return newState
                         else do -- skip message :(
-                            say "message skipped"
-                            return state
+                            -- say "message skipped"
+                            let !newSk = sk + 1
+                            return $ state { _skippedMsg = newSk }
                 Nothing -> error "can't be here" -- return state
 
 handleStatusMessage :: ReceiverState -> StatusMessage -> Process ReceiverState
@@ -84,10 +83,10 @@ calculateSumFromPQueue !pq !partialResult = result
     !result = foldl' calcSum partialResult pl
     calcSum (Result !s !m) (_, _, !v) = Result (s + v) (m + 1)
 
-receiveWorkerLoop :: Timestamp -> Int -> ReceiverState -> Process ()
-receiveWorkerLoop showTime nodesCount state = do
+receiveWorkerLoop :: Timestamp -> Int -> Int -> ReceiverState -> Process ()
+receiveWorkerLoop !showTime !nodesCount !msgBuffer !state = do
     !stateMay <- receiveTimeout 50
-        [ match $ handleValueMessage state
+        [ match $ handleValueMessage msgBuffer state
         , match $ handleStatusMessage state
         ]
     -- timer message
@@ -95,17 +94,17 @@ receiveWorkerLoop showTime nodesCount state = do
     let !state' = fromMaybe state stateMay
     -- if now < showTime
     if _finishedCount state' < nodesCount && now < showTime
-        then receiveWorkerLoop showTime nodesCount state'
+        then receiveWorkerLoop showTime nodesCount msgBuffer state'
         else do
             -- say $ "All nodes finished: " <> show (_finishedCount state' == nodesCount) <> " Time is out: " <> show (now >= showTime)
             let !finalResult = calculateSumFromPQueue (_valuePQueue state') (_partialResult state')
             -- say $ "All nodes finished: " <> show (_finishedCount state' == nodesCount) <> " Time is out: " <> show (now >= showTime)
             --    <> " Final state: " <> show state'
-            say $ "Final result: " <> showResult finalResult
+            say $ "Final result: " <> showResult finalResult <> " skipped: " <> show (_skippedMsg state')
 
-receiveWorker :: Timestamp -> Int -> Process ()
-receiveWorker showTime nodesCount = do
+receiveWorker :: Timestamp -> Int -> Int -> Process ()
+receiveWorker !showTime !nodesCount !msgBuffer = do
     self <- getSelfPid
     -- say $ "ReceiveWorker pid: " <> show self
     register receiverService self
-    receiveWorkerLoop showTime nodesCount initialReceiverState
+    receiveWorkerLoop showTime nodesCount msgBuffer initialReceiverState

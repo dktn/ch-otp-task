@@ -24,7 +24,7 @@ optionsParser = subparser (
     command "master"
         ( info
             ( helper <*> (
-                (\h p sd wd s -> MasterOptions (HostConfig h p) (MasterConfig sd wd s))
+                (\h p s w r d b -> MasterOptions (HostConfig h p) (MasterConfig s w r d b))
                     <$> argument str (metavar "HOST" <> help "Host name")
                     <*> argument str (metavar "PORT" <> help "Port number")
                     <*> option auto
@@ -44,6 +44,20 @@ optionsParser = subparser (
                         <> showDefault
                         <> value 0
                         <> help "Seed for random numbers generator" )
+                    <*> option auto
+                        ( long "msg-delay"
+                        <> short 'd'
+                        <> metavar "MICROSECONDS"
+                        <> showDefault
+                        <> value 100
+                        <> help "Delay between sending messages" )
+                    <*> option auto
+                        ( long "buffer-size"
+                        <> short 'b'
+                        <> metavar "NUMBER"
+                        <> showDefault
+                        <> value 5000
+                        <> help "Size of messages buffer" )
                 )
             )
             ( progDesc "Runs master process" )

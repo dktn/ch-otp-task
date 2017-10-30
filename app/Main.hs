@@ -35,7 +35,7 @@ threadDelayS :: Int -> IO ()
 threadDelayS = threadDelay . (* 1000000)
 
 master :: Backend -> MasterConfig -> [NodeId] -> Process ()
-master backend masterConfig@(MasterConfig sendDuration waitDuration initSeed) nodeIds = do
+master backend masterConfig@(MasterConfig sendDuration waitDuration initSeed _ _) nodeIds = do
     _processIds <- forM (withSeedsFrom initSeed nodeIds) $ spawnNode masterConfig nodeIds
     -- say $ "Slaves: "     <> show nodeIds
     -- say $ "Processes: "  <> show processIds

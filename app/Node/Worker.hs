@@ -17,7 +17,7 @@ import           Node.Sender
 worker :: WorkerConfig -> Process ()
 worker (WorkerConfig config nodes) = do
 -- worker workerConfig@(WorkerConfig config nodes) = do
-    -- say $ "Worker config: " <> show workerConfig
+    -- say $ "Worker config: " <> show config
     now <- liftIO getCurrentTimeMicros
     let sendDurationPrec = toInteger (timeResolution * _sendDuration config)
         waitDurationPrec = toInteger (timeResolution * _waitDuration config)
@@ -30,8 +30,8 @@ worker (WorkerConfig config nodes) = do
     -- say $ "Show    time: " <> show showTime
     -- say $ "Kill    time: " <> show killTime
 
-    void $ spawnLocal $ receiveWorker showTime $ length nodes
+    void $ spawnLocal $ receiveWorker showTime (length nodes) $ _msgBuffer config
 
-    liftIO $ threadDelay 100000
+    liftIO $ threadDelay 10000
     let gen = mkStdGen $ _seed config
-    sendWorker stopTime gen nodes
+    sendWorker stopTime gen nodes $ _msgDelay config
