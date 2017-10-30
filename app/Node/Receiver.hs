@@ -42,20 +42,6 @@ initialReceiverState = ReceiverState (Result 0.0 0) 0 0 PQ.empty 0
 showResult :: Result -> String
 showResult result = "<" <> show (_currentCount result) <> ", " <> show (_currentSum result) <> ">"
 
--- Test: ignoring the timestamp orders
--- handleValueMessageIgnoreTs :: ReceiverState -> ValueMessage -> Process ReceiverState
--- handleValueMessageIgnoreTs (ReceiverState (Result curSum count) lastTs pqsize pq fc) msg@(ValueMessage newVal newTs) = do
---     say $ "Received message (old handler): " <> show msg
---     return $ let newCount = count + 1 in ReceiverState (Result (curSum + fromIntegral newCount * newVal) newCount) newTs pqsize pq fc
-
--- -- Test: allow skipping messages arrived out of order
--- handleValueMessageSkipLateMsg :: ReceiverState -> ValueMessage -> Process ReceiverState
--- handleValueMessageSkipLateMsg state@(ReceiverState (Result curSum count) lastTs pqsize pq fc) msg@(ValueMessage newVal newTs) = do
---     say $ "Received message (old handler): " <> show msg
---     if lastTs < newTs -- TODO: this allows for skipping messages, idea: implement buffer
---         then return $ let newCount = count + 1 in ReceiverState (Result (curSum + fromIntegral newCount * newVal) newCount) newTs pqsize pq fc
---         else return state
-
 handleValueMessage :: ReceiverState -> ValueMessage -> Process ReceiverState
 handleValueMessage (ReceiverState (Result curSum count) _lastTs pqsize pq fc) msg@(ValueMessage newVal newTs) =
     -- say $ "Received message: " <> show msg

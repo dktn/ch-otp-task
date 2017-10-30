@@ -29,15 +29,14 @@ sendNumbersLoop stopTime gen nodeIds (SenderState count total) = do
     now <- liftIO getCurrentTimeMicros
     let (val, gen') = randomR (0, 1) gen :: (Double, StdGen)
         msg = ValueMessage val now
-        -- say $ show self <> " Random val: " <> show val <> " gen: " show gen'
+    -- say $ "Sending to all nodes message: " <> show msg
     forM_ nodeIds $ \nodeId ->
         -- say $ "Sending to node: " <> show nodeId <> " message: " <> show msg
         nsendRemote nodeId receiverService msg
     now' <- liftIO getCurrentTimeMicros
     let state' = SenderState (count + 1) (total + val * fromIntegral count)
-    if now' < stopTime
-        then sendNumbersLoop stopTime gen' nodeIds state'
-        else return () -- say $ "Sender final state: " <> show state'
+    when (now' < stopTime) $ sendNumbersLoop stopTime gen' nodeIds state'
+    -- when (now' >= stopTime) $ say $ "Sender final state: " <> show state'
 
 sendStop :: [NodeId] -> Process ()
 sendStop nodeIds =
