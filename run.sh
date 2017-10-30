@@ -18,6 +18,8 @@ run_master () {
     ch-opt-task master 127.0.0.1 8081 --send-for=$send_for --wait-for=$wait_for --with-seed=12345 --msg-delay=0 --buffer-size=5000 --time-to-show=700000 &
 }
 
+# send_for=3
+# wait_for=5
 send_for=10
 wait_for=15
 wait_killall_for=10

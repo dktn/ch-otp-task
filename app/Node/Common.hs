@@ -21,7 +21,9 @@ data NodeTimestamp = NodeTimestamp
     , _nodeId    :: !NodeId
     } deriving (Show, Eq, Ord, Generic, Binary, Hashable)
 
-data StatusMessage = Finished deriving (Show, Generic, Binary)
+data StartedMessage = Started deriving (Show, Generic, Binary)
+
+data FinishedMessage = Finished deriving (Show, Generic, Binary)
 
 data ValueMessage = ValueMessage
     { _nextValue     :: !Double
@@ -30,6 +32,9 @@ data ValueMessage = ValueMessage
 
 receiverService :: String
 receiverService = "receiver"
+
+senderService :: String
+senderService = "sender"
 
 timeResolution :: Int
 timeResolution = 1000000

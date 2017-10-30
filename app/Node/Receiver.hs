@@ -32,7 +32,6 @@ data ReceiverState = ReceiverState
     } deriving (Show)
 
 -- IDEAS:
--- - multiple queues
 -- - timer message
 
 initialReceiverState :: ReceiverState
@@ -69,8 +68,8 @@ handleValueMessage !msgBuffer state@(ReceiverState result@(Result !curSum !count
                             return $ state { _skippedMsg = newSk }
                 Nothing -> error "can't be here" -- return state
 
-handleStatusMessage :: ReceiverState -> StatusMessage -> Process ReceiverState
-handleStatusMessage !state Finished = do
+handleFinishedMessage :: ReceiverState -> FinishedMessage -> Process ReceiverState
+handleFinishedMessage !state Finished = do
     -- say $ "Received Finished status, result: " <> showResult state
     let !newFinishedCount = _finishedCount state + 1
         !newState = state { _finishedCount = newFinishedCount }
@@ -85,14 +84,13 @@ calculateSumFromPQueue !pq !partialResult = result
 
 receiveWorkerLoop :: Timestamp -> Int -> Int -> ReceiverState -> Process ()
 receiveWorkerLoop !showTime !nodesCount !msgBuffer !state = do
-    !stateMay <- receiveTimeout 500
+    !stateMay <- receiveTimeout 500 -- TODO: handle by message
         [ match $ handleValueMessage msgBuffer state
-        , match $ handleStatusMessage state
+        , match $ handleFinishedMessage state
         ]
     -- timer message
     now <- liftIO getCurrentTimeMicros
     let !state' = fromMaybe state stateMay
-    -- if now < showTime
     if _finishedCount state' < nodesCount && now < showTime
         then receiveWorkerLoop showTime nodesCount msgBuffer state'
         else do
@@ -104,9 +102,12 @@ receiveWorkerLoop !showTime !nodesCount !msgBuffer !state = do
             say $ "Final result: " <> showResult finalResult <> " " <> info
             -- say $ "Final result: " <> showResult finalResult
 
-receiveWorker :: Timestamp -> Int -> Int -> Process ()
-receiveWorker !showTime !nodesCount !msgBuffer = do
+receiveWorker :: Timestamp -> Int -> [NodeId] -> Process ()
+receiveWorker !showTime !msgBuffer !nodeIds = do
     self <- getSelfPid
     -- say $ "ReceiveWorker pid: " <> show self
     register receiverService self
-    receiveWorkerLoop showTime nodesCount msgBuffer initialReceiverState
+    forM_ nodeIds $ \nodeId ->
+        nsendRemote nodeId senderService Started
+
+    receiveWorkerLoop showTime (length nodeIds) msgBuffer initialReceiverState
