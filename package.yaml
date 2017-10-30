@@ -26,7 +26,6 @@ default-extensions:
 - OverloadedStrings
 - DeriveGeneric
 - DeriveAnyClass
-- BangPatterns
 executables:
   ch-opt-task:
     main: Main.hs

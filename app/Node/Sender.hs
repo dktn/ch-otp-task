@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 module Node.Sender
     ( sendWorker
     ) where
@@ -21,10 +23,10 @@ initialSenderState = SenderState 0 0.0
 
 
 sendNumbersLoop :: Timestamp -> StdGen -> [NodeId] -> SenderState -> Process ()
-sendNumbersLoop stopTime gen nodeIds (SenderState count total) = do
+sendNumbersLoop !stopTime !gen !nodeIds !(SenderState count total) = do
     -- liftIO $ threadDelay $ 29 * 100000 -- TODO: for tests, remove later
     -- liftIO $ threadDelay $ 1 * 100000 -- TODO: for tests, remove later
-    liftIO $ threadDelay 1000
+    liftIO $ threadDelay 0
     -- self <- getSelfPid
     now <- liftIO getCurrentTimeMicros
     let (val, gen') = randomR (0, 1) gen :: (Double, StdGen)

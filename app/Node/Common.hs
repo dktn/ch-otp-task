@@ -30,5 +30,5 @@ getCurrentTimeMicros :: IO Timestamp
 getCurrentTimeMicros = numerator . toRational . (* timeResolutionPOSIX) <$> getPOSIXTime
 
 timeToShowResult :: Int
-timeToShowResult = timeResolution `div` 10
+timeToShowResult = timeResolution `div` 5
 

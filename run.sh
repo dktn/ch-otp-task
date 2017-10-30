@@ -15,7 +15,7 @@ run_nodes () {
 
 run_master () {
     echo "$prefix Starting master"
-    ch-opt-task master 127.0.0.1 8081 --send-for=3 --wait-for=3 --with-seed=12345
+    ch-opt-task master 127.0.0.1 8081 --send-for=5 --wait-for=20 --with-seed=12345
 }
 
 prefix="Runner:"
