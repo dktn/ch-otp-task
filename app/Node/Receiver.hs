@@ -28,13 +28,12 @@ data ReceiverState = ReceiverState
     , _finishedCount   :: !Int
     } deriving (Show)
 
-data SenderState = SenderState
-    { _sentCounter :: Int
-    , _localSum    :: Double
-    } deriving (Show)
+-- IDEAS:
+-- - multiple queues
+-- - timer message
 
 maxPQSize :: Int
-maxPQSize = 100
+maxPQSize = 80
 
 initialReceiverState :: ReceiverState
 initialReceiverState = ReceiverState (Result 0.0 0) 0 0 PQ.empty 0
@@ -43,43 +42,51 @@ showResult :: Result -> String
 showResult result = "<" <> show (_currentCount result) <> ", " <> show (_currentSum result) <> ">"
 
 handleValueMessage :: ReceiverState -> ValueMessage -> Process ReceiverState
-handleValueMessage (ReceiverState (Result curSum count) _lastTs pqsize pq fc) msg@(ValueMessage newVal newTs) =
+handleValueMessage (ReceiverState result@(Result curSum count) _lastTs pqsize pq fc) msg@(ValueMessage newVal newTs) =
     -- say $ "Received message: " <> show msg
     if pqsize < maxPQSize
         then do
             -- say "Add to pq"
-            let pq' = PQ.insert msg newTs newVal pq
-            return $ ReceiverState (Result curSum count) newTs (pqsize + 1) pq' fc
+            let !pq' = PQ.insert msg newTs newVal pq
+                !newPQSize = pqsize + 1
+                !newState = ReceiverState result newTs newPQSize pq' fc
+            return newState
         else
+            -- check if the new message timestamp is higher than the minimum!!!!!
             case PQ.minView pq of
                 Just (_, _ts, val, pq') -> do
                     -- say $ "Remove from pq val " <> show val <> " ts " <> show ts
-                    let pq'' = PQ.insert msg newTs newVal pq'
-                        newCount = count + 1
-                    return $ ReceiverState (Result (curSum + fromIntegral newCount * val) newCount) newTs pqsize pq'' fc
+                    let !pq'' = PQ.insert msg newTs newVal pq'
+                        !newCount = count + 1
+                        !newSum = curSum + fromIntegral newCount * val
+                        !newResult = Result newSum newCount
+                        !newState = ReceiverState newResult newTs pqsize pq'' fc
+                    return newState
                 Nothing -> error "can't be here" -- return state
 
 handleStatusMessage :: ReceiverState -> StatusMessage -> Process ReceiverState
 handleStatusMessage state Finished = do
     -- say $ "Received Finished status, result: " <> showResult state
-    let newFinishedCount = _finishedCount state + 1
-    return $ state { _finishedCount = newFinishedCount }
+    let !newFinishedCount = _finishedCount state + 1
+        !newState = state { _finishedCount = newFinishedCount }
+    return newState
 
 calculateSumFromPQueue :: ValuePQueue -> Result -> Result
 calculateSumFromPQueue pq partialResult = result
   where
-    pl = PQ.toList pq
-    result = foldl' calcSum partialResult pl
-    calcSum (Result s m) (_, _, v) = Result (s + v) (m + 1)
+    !pl = PQ.toList pq
+    !result = foldl' calcSum partialResult pl
+    calcSum !(Result s m) !(_, _, !v) = Result (s + v) (m + 1)
 
 receiveWorkerLoop :: Timestamp -> Int -> ReceiverState -> Process ()
 receiveWorkerLoop showTime nodesCount state = do
-    stateMay <- receiveTimeout 10
+    !stateMay <- receiveTimeout 1000
         [ match $ handleValueMessage state
         , match $ handleStatusMessage state
         ]
+    -- timer message
     now <- liftIO getCurrentTimeMicros
-    let state' = fromMaybe state stateMay
+    let !state' = fromMaybe state stateMay
     if _finishedCount state' < nodesCount || now < showTime
         then receiveWorkerLoop showTime nodesCount state'
         else do

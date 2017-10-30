@@ -31,17 +31,18 @@ withSeedsFrom initSeed nodeIds = zip nodeIds seeds
     calcNextSeed :: Seed -> Seed
     calcNextSeed s = fromIntegral $ fromIntegral s * (2654435761 :: Integer) `mod` ((2 :: Integer) ^ (32 :: Integer)) -- Knuth's multiplicative method
 
+threadDelayS :: Int -> IO ()
+threadDelayS = threadDelay . (* 1000000)
+
 master :: Backend -> MasterConfig -> [NodeId] -> Process ()
-master backend masterConfig@(MasterConfig sendDur waitDur initSeed) nodeIds = do
-    let sendDurationMs = 1000000 * sendDur
-        waitDurationMs = 1000000 * waitDur
+master backend masterConfig@(MasterConfig sendDuration waitDuration initSeed) nodeIds = do
     processIds <- forM (withSeedsFrom initSeed nodeIds) $ spawnNode masterConfig nodeIds
-    say $ "Slaves: " <> show nodeIds
-    say $ "Processes: " <> show processIds
-    say $ "Sending for " <> show sendDur <> " second(s)"
-    liftIO $ threadDelay sendDurationMs
-    say $ "Waiting for " <> show waitDur <> " second(s)"
-    liftIO $ threadDelay waitDurationMs
+    say $ "Slaves: "     <> show nodeIds
+    say $ "Processes: "  <> show processIds
+    say $ "Sending for " <> show sendDuration <> " second(s)"
+    liftIO $ threadDelayS sendDuration
+    say $ "Waiting for " <> show waitDuration <> " second(s)"
+    liftIO $ threadDelayS waitDuration
     SL.terminateAllSlaves backend
     say "Slaves terminated"
 
