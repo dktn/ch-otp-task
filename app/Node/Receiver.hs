@@ -34,7 +34,7 @@ data SenderState = SenderState
     } deriving (Show)
 
 maxPQSize :: Int
-maxPQSize = 1
+maxPQSize = 10
 
 initialReceiverState :: ReceiverState
 initialReceiverState = ReceiverState (Result 0.0 0) 0 0 PQ.empty 0
@@ -42,10 +42,6 @@ initialReceiverState = ReceiverState (Result 0.0 0) 0 0 PQ.empty 0
 showResult :: ReceiverState -> String
 showResult = show
 -- showResult state = "<" <> show (currentCount state) <> ", " <> show (currentSum state) <> ">"
-
-
-
--- Receiver ---------------------------------------------------------------
 
 -- Test: ignoring the timestamp orders
 -- handleValueMessageIgnoreTs :: ReceiverState -> ValueMessage -> Process ReceiverState
@@ -72,8 +68,8 @@ handleValueMessage (ReceiverState (Result curSum count) _lastTs pqsize pq fc) ms
             return $ ReceiverState (Result curSum count) newTs (pqsize + 1) pq' fc
         else
             case PQ.minView pq of
-                Just (_, _ts, val, pq') -> do
-                    say $ "Remove from pq val " <> show newVal <> " ts " <> show newTs
+                Just (_, ts, val, pq') -> do
+                    say $ "Remove from pq val " <> show val <> " ts " <> show ts
                     let pq'' = PQ.insert msg newTs newVal pq'
                         newCount = count + 1
                     return $ ReceiverState (Result (curSum + fromIntegral newCount * val) newCount) newTs pqsize pq'' fc
@@ -86,9 +82,13 @@ handleStatusMessage state Finished = do
     return $ state { _finishedCount = newFinishedCount }
 
 calculateSumFromPQueue :: ValuePQueue -> Result -> Result
-calculateSumFromPQueue pq partialResult@(Result curSum count) = result
+-- calculateSumFromPQueue pq partialResult@(Result curSum count) = result
+calculateSumFromPQueue pq partialResult = result
   where
-    result = partialResult
+    -- result = partialResult
+    pl = PQ.toList pq
+    result = foldl' calcSum partialResult pl
+    calcSum (Result s m) (_, _, v) = Result (s + v) (m + 1)
 
 receiveWorkerLoop :: Timestamp -> Int -> ReceiverState -> Process ()
 receiveWorkerLoop showTime nodesCount state = do
@@ -97,25 +97,16 @@ receiveWorkerLoop showTime nodesCount state = do
         , match $ handleStatusMessage state
         ]
     now <- liftIO getCurrentTimeMicros
-    -- if finishedCount state' == nodesCount || now >= showTime
     let state' = fromMaybe state stateMay
     if now < showTime
+    -- if _finishedCount state' == nodesCount || now < showTime
         then receiveWorkerLoop showTime nodesCount state'
         else do
+            let finalResult = calculateSumFromPQueue (_valuePQueue state') (_partialResult state')
             say $ "All nodes finished: " <> show (_finishedCount state' == nodesCount) <> " Time is out: " <> show (now >= showTime)
-               <> " Final result: " <> showResult state'
-            -- let finalResult =
+               <> " Final state: " <> showResult state'
+            say $ " Final result: " <> show finalResult
             -- state' <- case PQ.minView (messagePQueue state) of
-            return ()
-                -- Just (_, val, ts, pq') -> do
-                --     say $ "Remove from pq val " <> show val <> " ts " <> show ts
-                --     let pq'' = PQ.insert msg newTs newVal pq'
-                --         newCount = count + 1
-                --     return $ ReceiverState (Result (curSum + fromIntegral newCount * newVal) newCount) newTs pqsize pq'' fc
-                -- Nothing -> error "can't be here" -- return state
-            -- case stateMay of
-            --     Just state' -> receiveWorkerLoop showTime nodesCount state'
-            --     Nothing     -> receiveWorkerLoop showTime nodesCount state
 
 receiveWorker :: Timestamp -> Int -> Process ()
 receiveWorker showTime nodesCount = do

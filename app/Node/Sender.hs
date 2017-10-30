@@ -22,8 +22,8 @@ initialSenderState = SenderState 0 0.0
 
 sendNumbersLoop :: Timestamp -> StdGen -> [NodeId] -> SenderState -> Process ()
 sendNumbersLoop stopTime gen nodeIds (SenderState count total) = do
-    liftIO $ threadDelay $ 29 * 100000 -- TODO: for tests, remove later
-    -- liftIO $ threadDelay $ 15 * 100000 -- TODO: for tests, remove later
+    -- liftIO $ threadDelay $ 29 * 100000 -- TODO: for tests, remove later
+    liftIO $ threadDelay $ 1 * 100000 -- TODO: for tests, remove later
     -- self <- getSelfPid
     now <- liftIO getCurrentTimeMicros
     let (val, gen') = randomR (0, 1) gen :: (Double, StdGen)
