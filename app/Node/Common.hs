@@ -37,9 +37,6 @@ timeResolution = 1000000
 timeResolutionPOSIX :: POSIXTime
 timeResolutionPOSIX = 1000000
 
-timeToShowResult :: Int
-timeToShowResult = 200000
-
 getCurrentTimeMicros :: IO Timestamp
 getCurrentTimeMicros = numerator . toRational . (* timeResolutionPOSIX) <$> getPOSIXTime
 

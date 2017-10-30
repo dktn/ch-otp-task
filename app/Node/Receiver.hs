@@ -85,7 +85,7 @@ calculateSumFromPQueue !pq !partialResult = result
 
 receiveWorkerLoop :: Timestamp -> Int -> Int -> ReceiverState -> Process ()
 receiveWorkerLoop !showTime !nodesCount !msgBuffer !state = do
-    !stateMay <- receiveTimeout 50
+    !stateMay <- receiveTimeout 500
         [ match $ handleValueMessage msgBuffer state
         , match $ handleStatusMessage state
         ]
@@ -96,11 +96,13 @@ receiveWorkerLoop !showTime !nodesCount !msgBuffer !state = do
     if _finishedCount state' < nodesCount && now < showTime
         then receiveWorkerLoop showTime nodesCount msgBuffer state'
         else do
-            -- say $ "All nodes finished: " <> show (_finishedCount state' == nodesCount) <> " Time is out: " <> show (now >= showTime)
+            calcStart <- liftIO getCurrentTimeMicros
             let !finalResult = calculateSumFromPQueue (_valuePQueue state') (_partialResult state')
-            -- say $ "All nodes finished: " <> show (_finishedCount state' == nodesCount) <> " Time is out: " <> show (now >= showTime)
-            --    <> " Final state: " <> show state'
-            say $ "Final result: " <> showResult finalResult <> " skipped: " <> show (_skippedMsg state')
+            calcEnd <- liftIO getCurrentTimeMicros
+            let !info = "all finished " <> show (_finishedCount state' == nodesCount) <> " timeout " <> show (now >= showTime)
+                     <> " skipped " <> show (_skippedMsg state') <> " result time " <> show (calcEnd - calcStart)
+            say $ "Final result: " <> showResult finalResult <> " " <> info
+            -- say $ "Final result: " <> showResult finalResult
 
 receiveWorker :: Timestamp -> Int -> Int -> Process ()
 receiveWorker !showTime !nodesCount !msgBuffer = do

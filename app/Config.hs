@@ -19,6 +19,7 @@ data MasterConfig = MasterConfig
     , _seed         :: Seed
     , _msgDelay     :: Int
     , _msgBuffer    :: Int
+    , _timeToShow   :: Int
     } deriving (Show, Generic, Binary)
 
 data WorkerConfig = WorkerConfig

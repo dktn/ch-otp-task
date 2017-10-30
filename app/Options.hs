@@ -24,7 +24,7 @@ optionsParser = subparser (
     command "master"
         ( info
             ( helper <*> (
-                (\h p s w r d b -> MasterOptions (HostConfig h p) (MasterConfig s w r d b))
+                (\h p s w r d b t -> MasterOptions (HostConfig h p) (MasterConfig s w r d b t))
                     <$> argument str (metavar "HOST" <> help "Host name")
                     <*> argument str (metavar "PORT" <> help "Port number")
                     <*> option auto
@@ -58,6 +58,13 @@ optionsParser = subparser (
                         <> showDefault
                         <> value 5000
                         <> help "Size of messages buffer" )
+                    <*> option auto
+                        ( long "time-to-show"
+                        <> short 't'
+                        <> metavar "MICROSECONDS"
+                        <> showDefault
+                        <> value 500000
+                        <> help "Time needed to calculate and show result" )
                 )
             )
             ( progDesc "Runs master process" )

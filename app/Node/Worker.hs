@@ -21,7 +21,7 @@ worker (WorkerConfig config nodes) = do
     now <- liftIO getCurrentTimeMicros
     let sendDurationPrec = toInteger (timeResolution * _sendDuration config)
         waitDurationPrec = toInteger (timeResolution * _waitDuration config)
-        showDurationPrec = waitDurationPrec - toInteger timeToShowResult
+        showDurationPrec = waitDurationPrec - toInteger (_timeToShow config)
         stopTime = now      + sendDurationPrec
         showTime = stopTime + showDurationPrec
         -- killTime = stopTime + waitDurationPrec
@@ -32,6 +32,6 @@ worker (WorkerConfig config nodes) = do
 
     void $ spawnLocal $ receiveWorker showTime (length nodes) $ _msgBuffer config
 
-    liftIO $ threadDelay 10000
+    liftIO $ threadDelay 200000
     let gen = mkStdGen $ _seed config
     sendWorker stopTime gen nodes $ _msgDelay config
