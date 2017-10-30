@@ -4,6 +4,7 @@ module Node.Worker
 
 import           Protolude
 
+import           Control.Concurrent          (threadDelay)
 import           Control.Distributed.Process
 import           System.Random
 
@@ -31,5 +32,6 @@ worker (WorkerConfig config nodes) = do
 
     void $ spawnLocal $ receiveWorker showTime $ length nodes
 
+    liftIO $ threadDelay 100000
     let gen = mkStdGen $ _seed config
     sendWorker stopTime gen nodes

@@ -23,23 +23,24 @@ initialSenderState = SenderState 0 0.0
 
 
 sendNumbersLoop :: Timestamp -> StdGen -> [NodeId] -> SenderState -> Process ()
-sendNumbersLoop !stopTime !gen !nodeIds !(SenderState count total) = do
+sendNumbersLoop !stopTime !gen !nodeIds state@(SenderState count total) = do
     -- liftIO $ threadDelay $ 29 * 100000 -- TODO: for tests, remove later
     -- liftIO $ threadDelay $ 1 * 100000 -- TODO: for tests, remove later
     liftIO $ threadDelay 0
-    -- self <- getSelfPid
+    pid <- getSelfPid
+    let nid = processNodeId pid
     now <- liftIO getCurrentTimeMicros
     let (val, gen') = randomR (0, 1) gen :: (Double, StdGen)
-        msg = ValueMessage val now
+        msg = ValueMessage val (NodeTimestamp now nid)
     -- say $ "Sending to all nodes message: " <> show msg
     forM_ nodeIds $ \nodeId ->
         -- say $ "Sending to node: " <> show nodeId <> " message: " <> show msg
         nsendRemote nodeId receiverService msg
     now' <- liftIO getCurrentTimeMicros
-    let !newCount = count + 1
-        !newTotal = (total + val * fromIntegral count)
-        !state' = SenderState newCount newTotal
-    when (now' < stopTime) $ sendNumbersLoop stopTime gen' nodeIds state'
+    -- let !newCount = count + 1
+    --     !newTotal = (total + val * fromIntegral count)
+    --     !state' = SenderState newCount newTotal
+    when (now' < stopTime) $ sendNumbersLoop stopTime gen' nodeIds state
     -- when (now' >= stopTime) $ say $ "Sender final state: " <> show state'
 
 sendStop :: [NodeId] -> Process ()

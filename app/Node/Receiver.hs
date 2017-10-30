@@ -15,7 +15,7 @@ import           Prelude                     (error)
 import           Node.Common
 
 
-type ValuePQueue = HashPSQ ValueMessage Timestamp Double
+type ValuePQueue = HashPSQ ValueMessage NodeTimestamp Double
 
 data Result = Result
     { _currentSum   :: !Double
@@ -44,23 +44,22 @@ showResult :: Result -> String
 showResult result = "<" <> show (_currentCount result) <> ", " <> show (_currentSum result) <> ">"
 
 handleValueMessage :: ReceiverState -> ValueMessage -> Process ReceiverState
-handleValueMessage state@(ReceiverState result@(Result !curSum !count) _lastTs pqsize !pq fc) msg@(ValueMessage newVal newTs) =
+handleValueMessage state@(ReceiverState result@(Result !curSum !count) _lastTs pqsize !pq fc) msg@(ValueMessage newVal nodeTs@(NodeTimestamp newTs _nodeId)) =
     -- say $ "Received message: " <> show msg
     if pqsize < maxPQSize
         then do
             -- say "Add to pq"
-            let !pq' = PQ.insert msg newTs newVal pq
+            let !pq' = PQ.insert msg nodeTs newVal pq
                 !newPQSize = pqsize + 1
                 !newState = ReceiverState result newTs newPQSize pq' fc
             return newState
         else
-            -- check if the new message timestamp is higher than the minimum!!!!!
             case PQ.minView pq of
-                Just (_, ts, val, pq') ->
-                    if ts < newTs
+                Just (_, nts@(NodeTimestamp _ts _nid), val, pq') ->
+                    if nts < nodeTs
                         then do
                             -- say $ "Remove from pq val " <> show val <> " ts " <> show ts
-                            let !pq'' = PQ.insert msg newTs newVal pq'
+                            let !pq'' = PQ.insert msg nodeTs newVal pq'
                                 !newCount = count + 1
                                 !newSum = curSum + fromIntegral newCount * val
                                 !newResult = Result newSum newCount
@@ -87,17 +86,19 @@ calculateSumFromPQueue !pq !partialResult = result
 
 receiveWorkerLoop :: Timestamp -> Int -> ReceiverState -> Process ()
 receiveWorkerLoop showTime nodesCount state = do
-    !stateMay <- receiveTimeout 1000
+    !stateMay <- receiveTimeout 50
         [ match $ handleValueMessage state
         , match $ handleStatusMessage state
         ]
     -- timer message
     now <- liftIO getCurrentTimeMicros
     let !state' = fromMaybe state stateMay
-    if _finishedCount state' < nodesCount || now < showTime
+    -- if now < showTime
+    if _finishedCount state' < nodesCount && now < showTime
         then receiveWorkerLoop showTime nodesCount state'
         else do
-            let finalResult = calculateSumFromPQueue (_valuePQueue state') (_partialResult state')
+            -- say $ "All nodes finished: " <> show (_finishedCount state' == nodesCount) <> " Time is out: " <> show (now >= showTime)
+            let !finalResult = calculateSumFromPQueue (_valuePQueue state') (_partialResult state')
             -- say $ "All nodes finished: " <> show (_finishedCount state' == nodesCount) <> " Time is out: " <> show (now >= showTime)
             --    <> " Final state: " <> show state'
             say $ "Final result: " <> showResult finalResult
