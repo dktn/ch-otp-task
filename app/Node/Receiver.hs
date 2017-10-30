@@ -16,16 +16,16 @@ import           Node.Common
 type ValuePQueue = HashPSQ ValueMessage Timestamp Double
 
 data Result = Result
-    { _currentSum   :: Double
-    , _currentCount :: Integer
+    { _currentSum   :: !Double
+    , _currentCount :: !Integer
     } deriving (Show)
 
 data ReceiverState = ReceiverState
-    { _partialResult   :: Result
-    , _latestTimeStamp :: Timestamp
-    , _pqueueSize      :: Int
-    , _valuePQueue     :: ValuePQueue
-    , _finishedCount   :: Int
+    { _partialResult   :: !Result
+    , _latestTimeStamp :: !Timestamp
+    , _pqueueSize      :: !Int
+    , _valuePQueue     :: !ValuePQueue
+    , _finishedCount   :: !Int
     } deriving (Show)
 
 data SenderState = SenderState
@@ -34,14 +34,13 @@ data SenderState = SenderState
     } deriving (Show)
 
 maxPQSize :: Int
-maxPQSize = 10
+maxPQSize = 100
 
 initialReceiverState :: ReceiverState
 initialReceiverState = ReceiverState (Result 0.0 0) 0 0 PQ.empty 0
 
-showResult :: ReceiverState -> String
-showResult = show
--- showResult state = "<" <> show (currentCount state) <> ", " <> show (currentSum state) <> ">"
+showResult :: Result -> String
+showResult result = "<" <> show (_currentCount result) <> ", " <> show (_currentSum result) <> ">"
 
 -- Test: ignoring the timestamp orders
 -- handleValueMessageIgnoreTs :: ReceiverState -> ValueMessage -> Process ReceiverState
@@ -58,18 +57,17 @@ showResult = show
 --         else return state
 
 handleValueMessage :: ReceiverState -> ValueMessage -> Process ReceiverState
-handleValueMessage (ReceiverState (Result curSum count) _lastTs pqsize pq fc) msg@(ValueMessage newVal newTs) = do
-    say $ "Received message: " <> show msg
-    -- add to priority queue
+handleValueMessage (ReceiverState (Result curSum count) _lastTs pqsize pq fc) msg@(ValueMessage newVal newTs) =
+    -- say $ "Received message: " <> show msg
     if pqsize < maxPQSize
         then do
-            say "Add to pq"
+            -- say "Add to pq"
             let pq' = PQ.insert msg newTs newVal pq
             return $ ReceiverState (Result curSum count) newTs (pqsize + 1) pq' fc
         else
             case PQ.minView pq of
-                Just (_, ts, val, pq') -> do
-                    say $ "Remove from pq val " <> show val <> " ts " <> show ts
+                Just (_, _ts, val, pq') -> do
+                    -- say $ "Remove from pq val " <> show val <> " ts " <> show ts
                     let pq'' = PQ.insert msg newTs newVal pq'
                         newCount = count + 1
                     return $ ReceiverState (Result (curSum + fromIntegral newCount * val) newCount) newTs pqsize pq'' fc
@@ -82,10 +80,8 @@ handleStatusMessage state Finished = do
     return $ state { _finishedCount = newFinishedCount }
 
 calculateSumFromPQueue :: ValuePQueue -> Result -> Result
--- calculateSumFromPQueue pq partialResult@(Result curSum count) = result
 calculateSumFromPQueue pq partialResult = result
   where
-    -- result = partialResult
     pl = PQ.toList pq
     result = foldl' calcSum partialResult pl
     calcSum (Result s m) (_, _, v) = Result (s + v) (m + 1)
@@ -98,15 +94,13 @@ receiveWorkerLoop showTime nodesCount state = do
         ]
     now <- liftIO getCurrentTimeMicros
     let state' = fromMaybe state stateMay
-    if now < showTime
-    -- if _finishedCount state' == nodesCount || now < showTime
+    if _finishedCount state' < nodesCount || now < showTime
         then receiveWorkerLoop showTime nodesCount state'
         else do
             let finalResult = calculateSumFromPQueue (_valuePQueue state') (_partialResult state')
-            say $ "All nodes finished: " <> show (_finishedCount state' == nodesCount) <> " Time is out: " <> show (now >= showTime)
-               <> " Final state: " <> showResult state'
-            say $ " Final result: " <> show finalResult
-            -- state' <- case PQ.minView (messagePQueue state) of
+            -- say $ "All nodes finished: " <> show (_finishedCount state' == nodesCount) <> " Time is out: " <> show (now >= showTime)
+            --    <> " Final state: " <> show state'
+            say $ "Final result: " <> showResult finalResult
 
 receiveWorker :: Timestamp -> Int -> Process ()
 receiveWorker showTime nodesCount = do

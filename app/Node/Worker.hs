@@ -12,7 +12,6 @@ import           Node.Common
 import           Node.Receiver
 import           Node.Sender
 
--- Worker ---------------------------------------------------------------
 
 worker :: WorkerConfig -> Process ()
 worker (WorkerConfig config nodes) = do
@@ -35,6 +34,3 @@ worker (WorkerConfig config nodes) = do
 
     let gen = mkStdGen $ _seed config
     sendWorker stopTime gen nodes
-
-
-    -- liftIO $ threadDelay 3000000
