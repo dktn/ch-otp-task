@@ -7,6 +7,8 @@ module Node.Receiver
 import           Protolude                   hiding (state)
 
 import           Control.Distributed.Process
+import           Data.HashMap.Strict         (HashMap)
+import qualified Data.HashMap.Strict         as HM
 import           Data.HashPSQ                (HashPSQ)
 import qualified Data.HashPSQ                as PQ
 import           Data.String                 (String)
@@ -16,6 +18,7 @@ import           Node.Common
 
 
 type ValuePQueue = HashPSQ ValueMessage NodeTimestamp Double
+type MinTimestampMap = HashMap NodeId Timestamp
 
 data Result = Result
     { _currentSum   :: !Double
@@ -26,7 +29,9 @@ data ReceiverState = ReceiverState
     { _partialResult   :: !Result
     , _latestTimeStamp :: !Timestamp
     , _pqueueSize      :: !Int
+    , _maxpqueueSize   :: !Int
     , _valuePQueue     :: !ValuePQueue
+    , _minTimestamps   :: !MinTimestampMap
     , _finishedCount   :: !Int
     , _skippedMsg      :: !Integer
     } deriving (Show)
@@ -35,20 +40,21 @@ data ReceiverState = ReceiverState
 -- - timer message
 
 initialReceiverState :: ReceiverState
-initialReceiverState = ReceiverState (Result 0.0 0) 0 0 PQ.empty 0 0
+initialReceiverState = ReceiverState (Result 0.0 0) 0 0 0 PQ.empty HM.empty 0 0
 
 showResult :: Result -> String
 showResult result = "<" <> show (_currentCount result) <> ", " <> show (_currentSum result) <> ">"
 
 handleValueMessage :: Int -> ReceiverState -> ValueMessage -> Process ReceiverState
-handleValueMessage !msgBuffer state@(ReceiverState result@(Result !curSum !count) _lastTs pqsize !pq !fc !sk) msg@(ValueMessage newVal nodeTs@(NodeTimestamp newTs _nodeId)) =
+handleValueMessage !msgBuffer state@(ReceiverState result@(Result !curSum !count) _lastTs !pqsize !maxpqsize !pq !mt !fc !sk) msg@(ValueMessage newVal nodeTs@(NodeTimestamp newTs nodeId)) =
     -- say $ "Received message: " <> show msg
     if pqsize < msgBuffer
         then do
             -- say "Add to pq"
             let !pq' = PQ.insert msg nodeTs newVal pq
                 !newPQSize = pqsize + 1
-                !newState = ReceiverState result newTs newPQSize pq' fc sk
+                !newMaxPQSize = if newPQSize > maxpqsize then newPQSize else maxpqsize
+                !newState = ReceiverState result newTs newPQSize newMaxPQSize pq' mt fc sk
             return newState
         else
             case PQ.minView pq of
@@ -60,7 +66,7 @@ handleValueMessage !msgBuffer state@(ReceiverState result@(Result !curSum !count
                                 !newCount = count + 1
                                 !newSum = curSum + fromIntegral newCount * val
                                 !newResult = Result newSum newCount
-                                !newState = ReceiverState newResult newTs pqsize pq'' fc sk
+                                !newState = ReceiverState newResult newTs pqsize maxpqsize pq'' mt fc sk
                             return newState
                         else do -- skip message :(
                             -- say "message skipped"
@@ -83,7 +89,7 @@ calculateSumFromPQueue !pq !partialResult = result
     calcSum (Result !s !m) (_, _, !v) = Result (s + v) (m + 1)
 
 whenStr :: Bool -> String -> String
-whenStr p str = if p then str else ""
+whenStr p str = if p then str <> " " else ""
 
 receiveWorkerLoop :: Timestamp -> Int -> Int -> ReceiverState -> Process ()
 receiveWorkerLoop !showTime !nodesCount !msgBuffer !state = do
@@ -100,8 +106,8 @@ receiveWorkerLoop !showTime !nodesCount !msgBuffer !state = do
             -- calcStart <- liftIO getCurrentTimeMicros
             let !finalResult = calculateSumFromPQueue (_valuePQueue state') (_partialResult state')
             -- calcEnd <- liftIO getCurrentTimeMicros
-            let !info = whenStr (_finishedCount state' == nodesCount) "all finished " <> whenStr (now >= showTime) "timeout "
-                     <> whenStr (_skippedMsg state' > 0) (" skipped " <> show (_skippedMsg state'))
+            let !info = whenStr (_finishedCount state' == nodesCount) "all-finished" <> whenStr (now >= showTime) "timeout"
+                     <> whenStr (_skippedMsg state' > 0) ("skipped: " <> show (_skippedMsg state')) <> "max-buffer: " <> show (_maxpqueueSize state')
                     --  <> " result time " <> show (calcEnd - calcStart)
             say $ "Final result: " <> showResult finalResult <> " " <> info
             -- say $ "Final result: " <> showResult finalResult

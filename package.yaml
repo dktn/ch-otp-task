@@ -14,9 +14,9 @@ dependencies:
 - optparse-applicative
 - random
 - time
-# - pqueue
 - psqueues
 - hashable
+- unordered-containers
 - binary
 - binary-orphans
 - distributed-process

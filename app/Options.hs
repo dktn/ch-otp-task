@@ -63,7 +63,7 @@ optionsParser = subparser (
                         <> short 't'
                         <> metavar "MICROSECONDS"
                         <> showDefault
-                        <> value 500000
+                        <> value 700000
                         <> help "Time needed to calculate and show result" )
                 )
             )

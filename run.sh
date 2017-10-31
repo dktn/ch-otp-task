@@ -1,10 +1,14 @@
 #!/bin/bash
 
 send_for=12
-wait_for=10
+wait_for=12
 # send_for=10
 # wait_for=15
 wait_killall_for=10
+seed=12345
+
+prefix="Runner:"
+current_node=1
 
 run_node () {
     echo "$prefix Run node $current_node at $1:$2"
@@ -21,16 +25,19 @@ run_nodes () {
 
 run_master () {
     echo "$prefix Starting master"
-    ch-opt-task master 127.0.0.1 8081 --send-for=$send_for --wait-for=$wait_for --with-seed=12345 --msg-delay=0 --buffer-size=5000 --time-to-show=700000 &
+    ch-opt-task master 127.0.0.1 8081 --send-for=$send_for --wait-for=$wait_for --with-seed=$seed --msg-delay=0 --buffer-size=5000 --time-to-show=700000 &
+    sleep $(expr $send_for + $wait_for + $wait_killall_for)
+    echo "$prefix Killing all processes"
+    killall -9 ch-opt-task
 }
 
-prefix="Runner:"
-current_node=1
+run_program () {
+    run_nodes
+    run_master
+}
+
 if [ "$1" == "build" ]; then
-    stack install
+    stack install && run_program
+else
+    run_program
 fi
-run_nodes
-run_master
-sleep $(expr $send_for + $wait_for + $wait_killall_for)
-echo "$prefix Killing all processes"
-killall -9 ch-opt-task
