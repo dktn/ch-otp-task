@@ -2,6 +2,7 @@
 
 module Node.Sender
     ( sendWorker
+    , senderService
     ) where
 
 import           Protolude                   hiding (state)
@@ -18,13 +19,8 @@ data SenderState = SenderState
     , _localSum    :: !Double
     } deriving (Show)
 
-newtype InitSenderState = InitSenderState
-    { _startedCount :: Int
-    } deriving (Show)
-
 initialSenderState :: SenderState
 initialSenderState = SenderState 0 0.0
-
 
 sendNumbersLoop :: Timestamp -> StdGen -> [NodeId] -> Int -> SenderState -> Process ()
 sendNumbersLoop !stopTime !gen !nodeIds !msgDelay state@(SenderState _count _total) = do
@@ -47,23 +43,11 @@ sendNumbersLoop !stopTime !gen !nodeIds !msgDelay state@(SenderState _count _tot
     when (now' < stopTime) $ sendNumbersLoop stopTime gen' nodeIds msgDelay state
     -- when (now' >= stopTime) $ say $ "Sender final state: " <> show state'
 
-handleStartedMessage :: InitSenderState -> StartedMessage -> Process InitSenderState
-handleStartedMessage !state Started = do
-    -- say $ "Received Started status, result: " <> showResult state
-    let !newStarted = _startedCount state + 1
-        !newState = state { _startedCount = newStarted }
-    return newState
+handleStartMessage :: StartMessage -> Process ()
+handleStartMessage Start = return ()
 
-waitForAllNodesLoop :: Int -> InitSenderState -> Process ()
-waitForAllNodesLoop !nodesCount !state = do
-    state' <- receiveWait
-        [ match $ handleStartedMessage state
-        ]
-    when (_startedCount state' < nodesCount) $
-        waitForAllNodesLoop nodesCount state'
-
-waitForAllNodes :: Int -> Process ()
-waitForAllNodes nodesCount = waitForAllNodesLoop nodesCount $ InitSenderState 0
+waitForStart :: Process ()
+waitForStart = receiveWait [ match handleStartMessage ]
 
 sendStop :: [NodeId] -> Process ()
 sendStop nodeIds =
@@ -73,8 +57,12 @@ sendStop nodeIds =
 
 sendWorker :: Timestamp -> StdGen -> Int -> [NodeId] -> Process ()
 sendWorker !stopTime !gen !msgDelay !nodeIds = do
-    -- self <- getSelfPid
+    self <- getSelfPid
     -- say $ "SendWorker pid: " <> show self
-    -- waitForAllNodes $ length nodeIds
+    register senderService self
+
+    -- say "waiting"
+    waitForStart
+    -- say "sending"
     sendNumbersLoop stopTime gen nodeIds msgDelay initialSenderState
     sendStop nodeIds

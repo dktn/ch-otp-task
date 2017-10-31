@@ -23,8 +23,9 @@ data MasterConfig = MasterConfig
     } deriving (Show, Generic, Binary)
 
 data WorkerConfig = WorkerConfig
-    { _config  :: MasterConfig
-    , _nodeIds :: [NodeId]
+    { _config       :: MasterConfig
+    , _masterNodeId :: NodeId
+    , _nodeIds      :: [NodeId]
     } deriving (Show, Generic, Binary)
 
 data Options

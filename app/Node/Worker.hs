@@ -4,7 +4,7 @@ module Node.Worker
 
 import           Protolude
 
-import           Control.Concurrent          (threadDelay)
+-- import           Control.Concurrent          (threadDelay)
 import           Control.Distributed.Process
 import           System.Random
 
@@ -15,7 +15,7 @@ import           Node.Sender
 
 
 worker :: WorkerConfig -> Process ()
-worker (WorkerConfig config nodeIds) = do
+worker (WorkerConfig config masterNodeId nodeIds) = do
 -- worker workerConfig@(WorkerConfig config nodeIds) = do
     -- say $ "Worker config: " <> show config
     now <- liftIO getCurrentTimeMicros
@@ -30,7 +30,7 @@ worker (WorkerConfig config nodeIds) = do
     -- say $ "Show    time: " <> show showTime
     -- say $ "Kill    time: " <> show killTime
 
-    void $ spawnLocal $ receiveWorker showTime (_msgBuffer config) nodeIds
+    void $ spawnLocal $ receiveWorker showTime (_msgBuffer config) masterNodeId nodeIds
 
     -- liftIO $ threadDelay 200000
     let gen = mkStdGen $ _seed config

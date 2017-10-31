@@ -82,6 +82,9 @@ calculateSumFromPQueue !pq !partialResult = result
     !result = foldl' calcSum partialResult pl
     calcSum (Result !s !m) (_, _, !v) = Result (s + v) (m + 1)
 
+whenStr :: Bool -> String -> String
+whenStr p str = if p then str else ""
+
 receiveWorkerLoop :: Timestamp -> Int -> Int -> ReceiverState -> Process ()
 receiveWorkerLoop !showTime !nodesCount !msgBuffer !state = do
     !stateMay <- receiveTimeout 500 -- TODO: handle by message
@@ -94,20 +97,21 @@ receiveWorkerLoop !showTime !nodesCount !msgBuffer !state = do
     if _finishedCount state' < nodesCount && now < showTime
         then receiveWorkerLoop showTime nodesCount msgBuffer state'
         else do
-            calcStart <- liftIO getCurrentTimeMicros
+            -- calcStart <- liftIO getCurrentTimeMicros
             let !finalResult = calculateSumFromPQueue (_valuePQueue state') (_partialResult state')
-            calcEnd <- liftIO getCurrentTimeMicros
-            let !info = "all finished " <> show (_finishedCount state' == nodesCount) <> " timeout " <> show (now >= showTime)
-                     <> " skipped " <> show (_skippedMsg state') <> " result time " <> show (calcEnd - calcStart)
+            -- calcEnd <- liftIO getCurrentTimeMicros
+            let !info = whenStr (_finishedCount state' == nodesCount) "all finished " <> whenStr (now >= showTime) "timeout "
+                     <> whenStr (_skippedMsg state' > 0) (" skipped " <> show (_skippedMsg state'))
+                    --  <> " result time " <> show (calcEnd - calcStart)
             say $ "Final result: " <> showResult finalResult <> " " <> info
             -- say $ "Final result: " <> showResult finalResult
 
-receiveWorker :: Timestamp -> Int -> [NodeId] -> Process ()
-receiveWorker !showTime !msgBuffer !nodeIds = do
-    self <- getSelfPid
+receiveWorker :: Timestamp -> Int -> NodeId -> [NodeId] -> Process ()
+receiveWorker !showTime !msgBuffer !masterNodeId !nodeIds = do
+    -- self <- getSelfPid
     -- say $ "ReceiveWorker pid: " <> show self
-    register receiverService self
-    forM_ nodeIds $ \nodeId ->
-        nsendRemote nodeId senderService Started
+    register receiverService =<< getSelfPid
+
+    nsendRemote masterNodeId masterService Started
 
     receiveWorkerLoop showTime (length nodeIds) msgBuffer initialReceiverState

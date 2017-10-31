@@ -3,11 +3,32 @@
 CH/OTP Test Task Solution by Adam Szlachta
 
 
-Setup:
+Quick setup:
 
-1. Edit `nodes.sh` file to setup worker nodes (with host address and port number for each).
-2. Run `./run.sh build` in order to build, install (to `~/.local/bin`) and run the system.
-3. Subsequent runs can be shortened to `./run.sh` (no build).
+1. Run `stack setup`
+2. Edit `nodes.sh` file to setup worker nodes (with host address and port number for each).
+3. Run `./run.sh build` in order to build, install (to `~/.local/bin`) and run the system.
+4. Subsequent runs can be shortened to `./run.sh` (no build).
+
+
+Configuration:
+- Basic options
+- Extra options
+
+Running:
+- steps
+
+Implementation:
+- Priority queue
+- Terminating all slaves takes significant amount of time
+
+Tradeoffs:
+- Can't be solved in general
+
+Ideas:
+- Broadcasting
+- Ask to resend
+
 
 
 Questions:
