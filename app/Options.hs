@@ -49,14 +49,14 @@ optionsParser = subparser (
                         <> short 'd'
                         <> metavar "MICROSECONDS"
                         <> showDefault
-                        <> value 100
+                        <> value 0
                         <> help "Delay between sending messages" )
                     <*> option auto
-                        ( long "buffer-size"
+                        ( long "max-buffer-size"
                         <> short 'b'
                         <> metavar "NUMBER"
                         <> showDefault
-                        <> value 500000
+                        <> value 50000
                         <> help "Size of messages buffer" )
                     <*> option auto
                         ( long "time-to-show"
