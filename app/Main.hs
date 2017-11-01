@@ -29,4 +29,4 @@ main = run =<< execParser opts
     opts = info (optionsParser <**> helper)
       ( fullDesc
      <> progDesc "Runs distributed task"
-     <> header "ch-opt-task - CH/OPT Test Task" )
+     <> header "ch-otp-task - CH/OTP Test Task" )

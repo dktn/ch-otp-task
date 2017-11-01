@@ -1,11 +1,11 @@
-name: ch-opt-task
+name: ch-otp-task
 version: '0.1.0.0'
 category: research
 author: Adam Szlachta
 maintainer: adam.szlachta@gmail.com
 copyright: Apache 2.0
 license: BSD3
-github: dktn/ch-opt-task
+github: dktn/ch-otp-task
 extra-source-files:
 - README.md
 dependencies:
@@ -27,7 +27,7 @@ default-extensions:
 - DeriveGeneric
 - DeriveAnyClass
 executables:
-  ch-opt-task:
+  ch-otp-task:
     main: Main.hs
     source-dirs: app
     ghc-options:
