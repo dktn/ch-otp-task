@@ -1,10 +1,11 @@
 #!/bin/bash
 
-send_for=12
-wait_for=12
+send_for=20
+wait_for=15
+wait_killall_for=10
 # send_for=10
 # wait_for=15
-wait_killall_for=10
+# wait_killall_for=10
 seed=12345
 
 prefix="Runner:"
@@ -25,7 +26,7 @@ run_nodes () {
 
 run_master () {
     echo "$prefix Starting master"
-    ch-opt-task master 127.0.0.1 8081 --send-for=$send_for --wait-for=$wait_for --with-seed=$seed --msg-delay=0 --buffer-size=5000 --time-to-show=700000 &
+    ch-opt-task master 127.0.0.1 8081 --send-for=$send_for --wait-for=$wait_for --with-seed=$seed --msg-delay=00000 --buffer-size=5000 --time-to-show=700000 &
     sleep $(expr $send_for + $wait_for + $wait_killall_for)
     echo "$prefix Killing all processes"
     killall -9 ch-opt-task

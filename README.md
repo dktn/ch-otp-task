@@ -22,8 +22,9 @@ Implementation:
 - Priority queue
 - Terminating all slaves takes significant amount of time
 
-Tradeoffs:
+Trade-offs:
 - Can't be solved in general
+- Buffer limited by memory, limiting by timeouts problematic (can grow if there are many nodes)
 
 Ideas:
 - Broadcasting
