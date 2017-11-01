@@ -56,7 +56,7 @@ optionsParser = subparser (
                         <> short 'b'
                         <> metavar "NUMBER"
                         <> showDefault
-                        <> value 5000
+                        <> value 500000
                         <> help "Size of messages buffer" )
                     <*> option auto
                         ( long "time-to-show"

@@ -62,7 +62,7 @@ showResult result = "<" <> show (_currentCount result) <> ", " <> show (_current
 reduceBuffer :: NodeTimestamp -> (Result, ValuePQueue) -> Process (Result, ValuePQueue)
 reduceBuffer minNodeTs resultPQueue@(Result curSum count, pq) =
     case PQ.minView pq of
-        Just (_, nts@(NodeTimestamp _ts _nid), val, pq') -> do
+        Just (_, nts@(NodeTimestamp _ts _nid), val, pq') ->
             -- say $ "nts " <> show nts <> " val " <> show val <> " minNodeTs " <> show minNodeTs
             if nts < minNodeTs -- && False
                 then do
@@ -70,7 +70,7 @@ reduceBuffer minNodeTs resultPQueue@(Result curSum count, pq) =
                     let !newCount = count + 1
                         !newSum = curSum + fromIntegral newCount * val
                         !newResult = Result newSum newCount
-                    return (newResult, pq')
+                    reduceBuffer minNodeTs (newResult, pq')
                 else
                     -- say $ "skip " -- <> show nts
                     return resultPQueue
