@@ -255,6 +255,8 @@ There are two stop conditions:
 
 In both cases the sender calculates the result using the partial sum it already calculated online and the remaining messages from the queue buffer. Then displays the final result and exits.
 
+The displayed result may contain the message `all-finished` when the "stop" message was received from all worker or `timeout` when not all messages have been processed but there is no time to wait before the deadline. Moreover the size of maximum buffer used during calculations is displayed.
+
 ##### Implementation decisions
 
 1. The latest timestamps for all nodes are kept in the hash map using `Data.HashMap.Strict` from `unordered-containers` library which uses hash array mapped tries and claimes to have better performance than other maps. Actually anything could be used here, because the performance of this data structure is not critical. There is no even need for the map, as the list of nodes is static - ordinary `Vector` could work equally good.
