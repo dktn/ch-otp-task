@@ -215,7 +215,7 @@ Currently the `SimpleLocalnet` is used as a network backend. The processes are c
 
 In the implementation there is a special node `master`. It executes the following steps:
 1. Runs master process and register it (so it can be referred by a name and only the node id).
-2. Spawn worker processes on slave nodes (using `closure` mechanism and `remoteTable`). Each worker process is initiated with wide set of parameters (node id's of all slaves, master's node id, configuration). Moreover each worker is given a deterministic seed for random numbers generator based on the "master" seed. Only the first node gets the original master seed to avoid generating the same sequences by all slave processes.
+2. Spawn worker processes on slave nodes (using `closure` mechanism and `remoteTable`). Each worker process is initiated with wide set of parameters (node id's of all slaves, master's node id, configuration). Moreover each worker is given a deterministic seed for random numbers generator based on the "master" seed. Only the first node gets the original master seed to avoid generating the same sequences by all slave processes. The remaining seeds are calculated using Knuth's multiplicative method, but probably any method would work equally well, even incrementing consecutive seeds by one.
 3. Waits until all workers on slave nodes will notify that the are ready to receive messages using "master" service. It calculates the number of received "Started" messages and when the number is equal to the number of slave nodes it sends the "Start" message to workers using "sender" service. This algorithm is necessary to assure that no sender will start broadcasting before the receiver services are ready to get messages.
 4. Waits `--send-for` seconds and displays a message about timeout.
 5. Waits `--wait-for` seconds and displays another message about the next timeout.
@@ -283,6 +283,7 @@ It seems that the problem can't be solved in general without additional assumpti
 - The messages may be lost. Currently there is no check if there is a continuity of messages from a given sender. Such a check could be added and the receivers could possibly ask to resend messages. In this case the senders should also have a buffer. Note: this complicates the buffer optimization technique.
 - Buffer is limited by its size, so by memory. Perhaps taking some trade-offs into consideration it would be better to limit the buffer by the time span between the oldest and the newest message it handles. However in this case there is a risk that it can take significant amount of memory, especially when there are many nodes and the sending rate is high.
 - Refactor to be able to easily abstract over data structures and relevand algorithms used.
+- Use `lens` library for accessing and update'ing data structures.
 - Add CPU/memory benchmarks for various data structures and algorithms for the buffer, and after that use the best performing implementations.
 
 
@@ -302,5 +303,3 @@ It seems that the problem can't be solved in general without additional assumpti
 6. There are sending and waiting stages. The end of waiting stage is when the nodes are killed. How to announce the end of sending stage? Can master program send a special message to all nodes, or the nodes themselves should announce the end mutually? Or maybe it does not really matter?
 
 7. Since master node knows all slaves I'm currently initiating slave senders with the list of nodes so they can know who to send to and how many nodes exist. Is it acceptable? Or should I additionally implement some kind of node discovery?
-
-8. The implementation and improvements to the solution seem to be never ending task, so the more general question is when to stop.

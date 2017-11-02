@@ -1,5 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
-
 module Node.Sender
     ( sendWorker
     , senderService
@@ -7,62 +5,32 @@ module Node.Sender
 
 import           Protolude                   hiding (state)
 
-import           Control.Concurrent          (threadDelay)
-import           Control.Distributed.Process
-import           System.Random
+import           Control.Distributed.Process (NodeId, Process, expect, getSelfPid, processNodeId, register)
+import           System.Random               (StdGen, randomR)
 
 import           Node.Common
 
-
-data SenderState = SenderState
-    { _sentCounter :: !Int
-    , _localSum    :: !Double
-    } deriving (Show)
-
-initialSenderState :: SenderState
-initialSenderState = SenderState 0 0.0
-
-sendNumbersLoop :: Timestamp -> StdGen -> [NodeId] -> Int -> SenderState -> Process ()
-sendNumbersLoop !stopTime !gen !nodeIds !msgDelay state@(SenderState _count _total) = do
-    -- liftIO $ threadDelay $ 29 * 100000 -- TODO: for tests, remove later
-    -- liftIO $ threadDelay $ 1 * 100000 -- TODO: for tests, remove later
-    liftIO $ threadDelay msgDelay
-    pid <- getSelfPid
-    let nid = processNodeId pid
-    now <- liftIO getCurrentTimeMicros
-    let (val, gen') = randomR (0, 1) gen :: (Double, StdGen)
-        msg = ValueMessage val (NodeTimestamp now nid)
-    -- say $ "Sending to all nodes message: " <> show msg
-    forM_ nodeIds $ \nodeId ->
-        -- say $ "Sending to node: " <> show nodeId <> " message: " <> show msg
-        nsendRemote nodeId receiverService msg
-    now' <- liftIO getCurrentTimeMicros
-    -- let !newCount = count + 1
-    --     !newTotal = (total + val * fromIntegral count)
-    --     !state' = SenderState newCount newTotal
-    when (now' < stopTime) $ sendNumbersLoop stopTime gen' nodeIds msgDelay state
-    -- when (now' >= stopTime) $ say $ "Sender final state: " <> show state'
-
-handleStartMessage :: StartMessage -> Process ()
-handleStartMessage Start = return ()
+sendNumbersLoop :: NodeId -> Timestamp -> StdGen -> [NodeId] -> Int -> Process ()
+sendNumbersLoop selfNodeId stopTime gen nodeIds msgDelay = do
+    now <- getCurrentTimeMicros
+    when (now < stopTime) $ do
+        let (val, gen') = randomR (0, 1) gen :: (Double, StdGen)
+            msg = ValueMessage val (NodeTimestamp now selfNodeId)
+        broadcastToAll receiverService msg nodeIds
+        processDelay msgDelay
+        sendNumbersLoop selfNodeId stopTime gen' nodeIds msgDelay
 
 waitForStart :: Process ()
-waitForStart = receiveWait [ match handleStartMessage ]
+waitForStart = void (expect :: Process StartMessage)
 
 sendStop :: [NodeId] -> Process ()
-sendStop nodeIds =
-    forM_ nodeIds $ \nodeId ->
-        -- say "Sending STOP"
-        nsendRemote nodeId receiverService Finished
+sendStop = broadcastToAll receiverService Finished
 
 sendWorker :: Timestamp -> StdGen -> Int -> [NodeId] -> Process ()
-sendWorker !stopTime !gen !msgDelay !nodeIds = do
-    self <- getSelfPid
-    -- say $ "SendWorker pid: " <> show self
-    register senderService self
-
-    -- say "waiting"
+sendWorker stopTime gen msgDelay nodeIds = do
+    selfPid <- getSelfPid
+    let selfNid = processNodeId selfPid
+    register senderService selfPid
     waitForStart
-    -- say "sending"
-    sendNumbersLoop stopTime gen nodeIds msgDelay initialSenderState
+    sendNumbersLoop selfNid stopTime gen nodeIds msgDelay
     sendStop nodeIds

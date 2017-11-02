@@ -5,10 +5,11 @@ module Node.Master where
 
 import           Protolude                                          hiding (state)
 
-import           Control.Concurrent                                 (threadDelay)
-import           Control.Distributed.Process
-import           Control.Distributed.Process.Backend.SimpleLocalnet as SL
-import           Control.Distributed.Process.Closure
+import           Control.Distributed.Process                        (NodeId, Process, ProcessId, RemoteTable,
+                                                                     getSelfPid, match, processNodeId, receiveWait,
+                                                                     register, say, spawn)
+import           Control.Distributed.Process.Backend.SimpleLocalnet (Backend, terminateAllSlaves)
+import           Control.Distributed.Process.Closure                (mkClosure, remotable)
 import           Control.Distributed.Process.Node                   (initRemoteTable)
 
 import           Config
@@ -23,7 +24,6 @@ newtype MasterState = MasterState
 
 handleStartedMessage :: MasterState -> StartedMessage -> Process MasterState
 handleStartedMessage !state Started = do
-    -- say $ "Received Started status, result: " <> showResult state
     let !newStarted = _startedCount state + 1
         !newState = state { _startedCount = newStarted }
     return newState
@@ -37,9 +37,8 @@ waitForAllNodesLoop !nodesCount !state = do
 waitForAllNodes :: Int -> Process ()
 waitForAllNodes nodesCount = waitForAllNodesLoop nodesCount $ MasterState 0
 
-
-spawnNode :: MasterConfig -> NodeId -> [NodeId] -> (NodeId, Seed) -> Process ProcessId
-spawnNode masterConfig masterNodeId nodeIds (nodeId, nodeSeed) = spawn nodeId ($(mkClosure 'worker) workerConfig)
+spawnWorker :: MasterConfig -> NodeId -> [NodeId] -> (NodeId, Seed) -> Process ProcessId
+spawnWorker masterConfig masterNodeId nodeIds (nodeId, nodeSeed) = spawn nodeId ($(mkClosure 'worker) workerConfig)
   where
     workerConfig = WorkerConfig masterConfig' masterNodeId nodeIds
     masterConfig' = masterConfig { _seed = nodeSeed }
@@ -52,31 +51,29 @@ withSeedsFrom initSeed nodeIds = zip nodeIds seeds
     calcNextSeed :: Seed -> Seed
     calcNextSeed s = fromIntegral $ fromIntegral s * (2654435761 :: Integer) `mod` ((2 :: Integer) ^ (32 :: Integer)) -- Knuth's multiplicative method
 
-threadDelayS :: Int -> IO ()
-threadDelayS = threadDelay . (* 1000000)
+spawnAllNodes :: MasterConfig -> NodeId -> [NodeId] -> Process ()
+spawnAllNodes masterConfig masterNodeId nodeIds =
+    forM_ (withSeedsFrom (_seed masterConfig) nodeIds) $ spawnWorker masterConfig masterNodeId nodeIds
+
+waitAndTerminate :: Backend -> MasterConfig -> Process ()
+waitAndTerminate backend masterConfig@MasterConfig { _sendDuration = sendDuration, _waitDuration = waitDuration } = do
+    say $ "Config: "     <> show masterConfig
+    say $ "Sending for " <> show sendDuration <> " second(s)"
+    processDelaySec sendDuration
+    say $ "Waiting for " <> show waitDuration <> " second(s)"
+    processDelaySec waitDuration
+    terminateAllSlaves backend
+    say "Slaves terminated"
 
 master :: Backend -> MasterConfig -> [NodeId] -> Process ()
-master backend masterConfig@MasterConfig { _sendDuration = sendDuration, _waitDuration = waitDuration, _seed = seed } nodeIds = do
+master backend masterConfig nodeIds = do
     masterPid <- getSelfPid
     let masterNodeId = processNodeId masterPid
     register masterService masterPid
-
-    _processIds <- forM (withSeedsFrom seed nodeIds) $ spawnNode masterConfig masterNodeId nodeIds
-    -- say $ "Slaves: "     <> show nodeIds
-    -- say $ "Processes: "  <> show processIds
-    -- self <- getSelfPid
+    spawnAllNodes masterConfig masterNodeId nodeIds
     waitForAllNodes $ length nodeIds
-    forM_ nodeIds $ \nodeId ->
-        -- say $ "Sending start to node: " <> show nodeId
-        nsendRemote nodeId senderService Start
-
-    say $ "Config: " <> show masterConfig
-    say $ "Sending for " <> show sendDuration <> " second(s)"
-    liftIO $ threadDelayS sendDuration
-    say $ "Waiting for " <> show waitDuration <> " second(s)"
-    liftIO $ threadDelayS waitDuration
-    SL.terminateAllSlaves backend
-    say "Slaves terminated"
+    broadcastToAll senderService Start nodeIds
+    waitAndTerminate backend masterConfig
 
 remoteTable :: RemoteTable
 remoteTable = Node.Master.__remoteTable initRemoteTable

@@ -5,15 +5,13 @@ import           Protolude           hiding (option)
 import           Options.Applicative
 
 import           Config
-import           Utils
-
 
 optionsParser :: Parser Options
 optionsParser = subparser (
     command "slave"
         ( info
             ( helper <*> (
-                (SlaveOptions .: HostConfig)
+                (\h p -> SlaveOptions $ HostConfig h p)
                     <$> argument str (metavar "HOST" <> help "Host name")
                     <*> argument str (metavar "PORT" <> help "Port number")
                 )

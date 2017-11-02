@@ -1,8 +1,11 @@
 #!/bin/bash
 
-send_for=60
-wait_for=60
-wait_killall_for=20
+send_for=3
+wait_for=10
+wait_killall_for=10
+# send_for=60
+# wait_for=60
+# wait_killall_for=20
 # send_for=10
 # wait_for=15
 # wait_killall_for=10

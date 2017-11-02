@@ -1,25 +1,30 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Main where
 
 import           Protolude
 
-import           Control.Distributed.Process.Backend.SimpleLocalnet as SL
-import           Options.Applicative
+import           Control.Distributed.Process.Backend.SimpleLocalnet (initializeBackend, startMaster, startSlave)
+import           Options.Applicative                                (execParser, fullDesc, header, helper, info,
+                                                                     progDesc)
 
 import           Config
 import           Node.Master
 import           Options
 
+sanitazeConfig :: MasterConfig -> MasterConfig
+sanitazeConfig masterConfig =
+    masterConfig
+        { _sendDuration = max 1      (_sendDuration masterConfig)
+        , _waitDuration = max 1      (_waitDuration masterConfig)
+        , _msgDelay     = max 0      (_msgDelay     masterConfig)
+        , _msgBuffer    = max 1000   (_msgBuffer    masterConfig)
+        , _timeToShow   = max 100000 (_timeToShow   masterConfig)
+        }
+
 run :: Options -> IO ()
-run (MasterOptions hostConfig origMasterConfig@MasterConfig{ _sendDuration = sd, _waitDuration = wd }) = do
-    let masterConfig = origMasterConfig { _sendDuration = max 1 sd, _waitDuration = max 1 wd }
-    -- putText $ "Master started: " <> show hostConfig <> " " <> show masterConfig
+run (MasterOptions hostConfig origMasterConfig) = do
     backend <- initializeBackend (toS $ _host hostConfig) (toS $ _port hostConfig) remoteTable
-    startMaster backend (master backend masterConfig)
-    -- liftIO $ threadDelay 1000000
+    startMaster backend (master backend $ sanitazeConfig origMasterConfig)
 run (SlaveOptions hostConfig) = do
-    -- putText $ "Slave started: " <> show hostConfig
     backend <- initializeBackend (toS $ _host hostConfig) (toS $ _port hostConfig) remoteTable
     startSlave backend
 
