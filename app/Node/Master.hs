@@ -24,9 +24,8 @@ newtype MasterState = MasterState
 
 handleStartedMessage :: MasterState -> StartedMessage -> Process MasterState
 handleStartedMessage !state Started = do
-    let !newStarted = _startedCount state + 1
-        !newState = state { _startedCount = newStarted }
-    return newState
+    let !startedCount' = _startedCount state + 1
+    return $ state { _startedCount = startedCount' }
 
 waitForAllNodesLoop :: Int -> MasterState -> Process ()
 waitForAllNodesLoop !nodesCount !state = do
