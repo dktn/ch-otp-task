@@ -49,7 +49,7 @@ Available options:
 The only parameters to pass to slave is `host` (ip address) and `port` on which it runs.
 Slave does not do anything until it's set up by master process.
 Example usage: `ch-otp-task slave 127.0.0.1 8082 &`.
-Note: the task is run in the background in order to be able to run many slave nodes easily from the same terminal session.
+_Note:_ the task is run in the background in order to be able to run many slave nodes easily from the same terminal session.
 
 ##### Master
 The result of `ch-otp-task master --help`:
@@ -83,7 +83,7 @@ The parameters `--send-for`, `--wait-for` and `--with-seed` are defined in the t
 ### 2.2 Additional options
 
 The remaining parameters for the `master` have following meaning:
-- `--msg-delay` - delay in microseconds before sender sends the message. It allows for throttling the speed of message generators. Defaults to 0. __Warning:__ for some reasons, in some circumstances the small but non-zero values can give unexpected behaviour and hang the system (on MacOS Sierra). Value `0` seems to be fine in most of the cases, but if not a values at least `10000`-`100000` microseconds is recommended.
+- `--msg-delay` - delay in microseconds before sender sends the message. It allows for throttling the speed of message generators. Defaults to 0. __Warning:__ for some reasons, in some circumstances the small but non-zero values can give unexpected behaviour and hang the system (on MacOS Sierra). Value `0` seems to be fine in most of the cases, but if not a value from a range at least `10000`-`100000` microseconds is recommended.
 - `--max-buffer-size` - the maximum size of the buffer in the receiver, in the number of messages. When the value of this buffer is exceeded the incoming messages will be ignored.
 - `--time-to-show` - this is the time in microseconds before the end of wait period. It's an absolute deadline to show the results of calculations, but in many cases the result will be calculated much quicker.
 
@@ -209,27 +209,80 @@ Master node runs and synchronizes the start of worker processes on slave nodes. 
 
 ### 4.2 Long description
 
+Currently the `SimpleLocalnet` is used as a network backend. The processes are communitating with each other using registered services and `nsendRemote` function.
 
-- Priority queue
-- Terminating all slaves takes significant amount of time
+#### 4.2.1 Start phase and the master role
 
-### 4.3 Trade-offs:
-- Can't be solved in general
-- Buffer limited by memory, limiting by timeouts problematic (can grow if there are many nodes)
+In the implementation there is a special node `master`. It executes the following steps:
+1. Runs master process and register it (so it can be referred by a name and only the node id).
+2. Spawn worker processes on slave nodes (using `closure` mechanism and `remoteTable`). Each worker process is initiated with wide set of parameters (node id's of all slaves, master's node id, configuration). Moreover each worker is given a deterministic seed for random numbers generator based on the "master" seed. Only the first node gets the original master seed to avoid generating the same sequences by all slave processes.
+3. Waits until all workers on slave nodes will notify that the are ready to receive messages using "master" service. It calculates the number of received "Started" messages and when the number is equal to the number of slave nodes it sends the "Start" message to workers using "sender" service. This algorithm is necessary to assure that no sender will start broadcasting before the receiver services are ready to get messages.
+4. Waits `--send-for` seconds and displays a message about timeout.
+5. Waits `--wait-for` seconds and displays another message about the next timeout.
+6. Performs `terminateAllSlaves` operation. _Note:_ this operation may be time consuming. The `run.sh` script has additional timout for terminating (`wait_killall_for` variable). After this additional time all the `ch-otp-task` nodes are "hard" killed using `killall -9 ch-otp-task` command.
+
+#### 4.2.2 Sending
+A worker process is spawned by master on a slave node with some initial parameters: configuration (send-for, wait-for times, seed etc.), the node id of the master, the node id's of all the existing slave nodes. It first spawns the receiver process and then continues as a sender process. As a sender it first registers itself as a sender service, and then waits until master lets him start the job by sending "Start" message. After the "Start" message is received it automaticaly starts sending messages to all nodes until the time is out. When it happens it sends the special "Finished" message to all slave nodes indicating that it does not have any other message to send.
+
+The message logically consists of a triple:
+1. Floating point random value from the range (0-1]
+2. Timestamp in microseconds (POSIX - time elapsed from 1 January 1970)
+3. Node id
+
+The Timestamp is sent in order to allow the receiver determine the time when the message was sent. τ function just yields this part of incoming message. The node id is required to: a) break ties (the clocks resolutons are limited), b) optimize the receiver buffer size.
+
+#### 4.2.3 Receiving
+The receiver process first registers the receiver service and sends "Started" message to the master node indicating that it's up and running.
+
+In general it waits for two kind of messages: a) messages with random values, b) messages indicating that a sender finished generating new values.
+
+##### Message
+
+As mentioned above the message contains a random value, timestamp and node id. The receiver keeps track of the latest messages sent by all nodes (it uses hash map to do that). This allows for some kind of buffer optimization and relies on the fact that the messages from the same sender will arrive in order, as the documentation (http://haskell-distributed.github.io/tutorials/3ch.html) states:
+"When two concurrent process exchange messages, Cloud Haskell guarantees that messages will be delivered in FIFO order, if at all."
+
+In the next step the new message is put to the priority queue which plays the role of buffer. In order to do that the size of the buffer is checked against the maximum allowed.
+
+If the size reaches the limit, the smallest value from the priority queue is taken using classic `minView` operation (O(log n) complexity, where n is the size of the queue). The priority queue uses a pair (timestamp, node id) for ordering of the values. Node id is used here to break ties, because the resolution of the clocks is limited. It's also suggested in the paper "Time, Clocks, and the Ordering of Events in a Distributed System" by Leslie Lamport (p. 561) to use any arbitraty total ordering of processes to break ties. If that minimum value from the queue has lower timestamp (with node id) that the new message the new partial sum is calculated using that value, and the new message is inserted into the queue (again O(log n) complexity - note that in general when the sorting/order is demanded we can't go better than O(log n) anyway).
+
+If the size does not yet reach the limit the new message is simply put into the priority queue. Then the optimization of the queue is performed. Because the messages from the same sender arrive in order (see the link above), then taking the minimum of all timestamps from the last timestamps from all the nodes gives the bottom limit of the timestamps we can expect in the future (the proof is trivial). That means that we can take out from the queue all the messages with lower timestamps than the minimum of all latest timestamps. Therefore the reduce step is performed recursively in order to progress the calculation of the result sum and make the size of the queue smaller (perhaps there is a space for some constant time optimization here). After the reducing step is performed we are sure that there are no unecessary messages in the queue and that the result sum is calculated online and never postponed.
+
+##### Stop condition
+
+There are two stop conditions:
+1. When all nodes have sent "Finished" message (there is a counter to keep track of them).
+2. When the absolute deadline is met. The deadline is equal to the time after wait period minus the time to show parameter (with default value less than 1s, currently 0.7s)
+
+In both cases the sender calculates the result using the partial sum it already calculated online and the remaining messages from the queue buffer. Then displays the final result and exits.
+
+##### Implementation decisions
+
+1. The latest timestamps for all nodes are kept in the hash map using `Data.HashMap.Strict` from `unordered-containers` library which uses hash array mapped tries and claimes to have better performance than other maps. Actually anything could be used here, because the performance of this data structure is not critical. There is no even need for the map, as the list of nodes is static - ordinary `Vector` could work equally good.
+
+2. The buffer is implemented using priority queue, exactly using `Data.HashPSQ` priority search queue from `psqueues` library which uses `IntPSQ` as a base and `OrdPSQ` to solve colisions. `IntPSQ` uses radix tree with additional min-heap property. The library claims to be the fastest implementation priority queue for Haskell and shows some benchmarks to illustrate that. However using the priority queue is actually questionable, even though it seems to be very natural in this application. Perhaps other kind of structures providing O(log n) insertion or O(log n) removing smallest operations would work equally well, but would give smaller memory hit.
+
+3. Terminating all slaves takes significant amount of time. I can't find the reason of that other than a way `distributed-process` library handles it. Therefor the `run.sh' script contains additional `killall -9` command.
+
+### 4.3 Conclusions and concerns
+
+1. It seems that the problem can't be solved in general without additional assumptions or trade-offs. One can imagine a situation when one node sends messages much slower than others, or its messages are lost in communication. In this case the buffer in all the receivers will grow until it exceeds the limit and the result sum can't be properly calculated. It's because the receivers must assume that they can expect a very old (small timestamp) message from the slow one and wait with all the newer ones from other senders.
+
+2. Buffer is limited by its size, so by memory. Perhaps taking some trade-offs into consideration it would be better to limit the buffer by the time span between the oldest and the newest message it handles. However in this case there is a risk that it can take significant amount of memory, especially when there are many nodes and the sending rate is high.
 
 ### 4.4 TODO list
 
 1. Add protection against incorrect setups, for example with nodes started on "busy" ports.
 2. Check the suspicious behaviour (hanging system) in some rare cases for small delay times - possibly a bug in High Sierra or distributed-process itself.
 3. Terminating all slaves takes significant amount of time - investigate.
-4. Add CPU/memory benchmarks for various data structures and algorithms.
+4. Clean up, rething strictness annotations (bang patterns).
 
 ### 4.5 Ideas:
-- Broadcasting
-- Peer discovery
-- Resends
-- Refactor to be able to easily abstract over data structures used
-- Use different data structures
+- The system is now designed with possible delays in mind. Make it possible to work well with permanent failures of nodes or processes.
+- Currently the system uses services, and the nodes list is given explicitely to each node. It seems that a special broadcasting layer which abstracts over this technical concerns could simplify the implementation.
+- Currently the peer discovery is not necessary. However the solution would be more general if the worker nodes didn't have to be informed by the list of other accessible nodes but they could find out that list automaticaly by exchanging the partial information of the network between each other.
+- The messages may be lost. Currently there is no check if there is a continuity of messages from a given sender. Such a check could be added and the receivers could possibly ask to resend messages. In this case the senders should also have a buffer. Note: this complicates the buffer optimization technique.
+- Refactor to be able to easily abstract over data structures and relevand algorithms used.
+- Add CPU/memory benchmarks for various data structures and algorithms for the buffer, and after that use the best performing implementations.
 
 
 
@@ -249,4 +302,4 @@ Master node runs and synchronizes the start of worker processes on slave nodes. 
 
 7. Since master node knows all slaves I'm currently initiating slave senders with the list of nodes so they can know who to send to and how many nodes exist. Is it acceptable? Or should I additionally implement some kind of node discovery?
 
-
+8. The implementation and improvements to the solution seem to be never ending task, so the more general question is when to stop.
