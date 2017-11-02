@@ -267,9 +267,7 @@ The displayed result may contain the message `all-finished` when the "stop" mess
 
 ### 4.3 Conclusions and concerns
 
-1. It seems that the problem can't be solved in general without additional assumptions or trade-offs. One can imagine a situation when one node sends messages much slower than others, or its messages are lost in communication. In this case the buffer in all the receivers will grow until it exceeds the limit and the result sum can't be properly calculated. It's because the receivers must assume that they can expect a very old (small timestamp) message from the slow one and wait with all the newer ones from other senders.
-
-2. Buffer is limited by its size, so by memory. Perhaps taking some trade-offs into consideration it would be better to limit the buffer by the time span between the oldest and the newest message it handles. However in this case there is a risk that it can take significant amount of memory, especially when there are many nodes and the sending rate is high.
+It seems that the problem can't be solved in general without additional assumptions or trade-offs. One can imagine a situation when one node sends messages much slower than others, or its messages are lost in communication. In this case the buffer in all the receivers will grow until it exceeds the limit and the result sum can't be properly calculated. It's because the receivers must assume that they can expect a very old (small timestamp) message from the slow one and wait with all the newer ones from other senders.
 
 ### 4.4 TODO list
 
@@ -283,6 +281,7 @@ The displayed result may contain the message `all-finished` when the "stop" mess
 - Currently the system uses services, and the nodes list is given explicitely to each node. It seems that a special broadcasting layer which abstracts over this technical concerns could simplify the implementation.
 - Currently the peer discovery is not necessary. However the solution would be more general if the worker nodes didn't have to be informed by the list of other accessible nodes but they could find out that list automaticaly by exchanging the partial information of the network between each other.
 - The messages may be lost. Currently there is no check if there is a continuity of messages from a given sender. Such a check could be added and the receivers could possibly ask to resend messages. In this case the senders should also have a buffer. Note: this complicates the buffer optimization technique.
+- Buffer is limited by its size, so by memory. Perhaps taking some trade-offs into consideration it would be better to limit the buffer by the time span between the oldest and the newest message it handles. However in this case there is a risk that it can take significant amount of memory, especially when there are many nodes and the sending rate is high.
 - Refactor to be able to easily abstract over data structures and relevand algorithms used.
 - Add CPU/memory benchmarks for various data structures and algorithms for the buffer, and after that use the best performing implementations.
 
