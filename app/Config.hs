@@ -3,9 +3,10 @@ module Config where
 import           Protolude
 
 import           Control.Distributed.Process (NodeId)
-import           Data.Binary
+import           Data.Binary                 (Binary)
 
-type Seed = Int
+type Seed     = Int
+
 type Duration = Int
 
 data HostConfig = HostConfig

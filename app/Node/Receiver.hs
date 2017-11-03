@@ -43,7 +43,7 @@ initialMinTimestampMap nodeIds = HM.fromList $ initWithZeroTimestamp <$> nodeIds
     initWithZeroTimestamp nodeId = (nodeId, NodeTimestamp 0 nodeId)
 
 initialNodeTimestamp :: NodeTimestamp
-initialNodeTimestamp = NodeTimestamp 0 (NodeId (EndPointAddress ""))
+initialNodeTimestamp = NodeTimestamp 0 $ NodeId $ EndPointAddress ""
 
 initialReceiverState :: [NodeId] -> ReceiverState
 initialReceiverState nodeIds = ReceiverState (Result 0.0 0 initialNodeTimestamp) 0 0 PQ.empty (initialMinTimestampMap nodeIds) 0 0
@@ -124,7 +124,6 @@ calculateSumFromPQueue !pq !partialResult = foldl' addNewVal partialResult vals
     !vals = fmap (\(_, !nts, !v) -> (v, nts)) $ sortBy (comparing (\(_, nts, _) -> nts)) $ PQ.toList pq -- TODO: optimize
     addNewVal result (val, newNodeTs) = addValToResult result val newNodeTs
 
-
 calcResult :: Timestamp -> Timestamp -> Int -> ReceiverState -> Process ()
 calcResult !now !showTime !nodesCount !state = do
     let !finalResult = calculateSumFromPQueue (_valuePQueue state) (_partialResult state)
@@ -133,7 +132,7 @@ calcResult !now !showTime !nodesCount !state = do
             <> "max-buffer: " <> show (_maxpqueueSize state) <> " "
             <> whenStr (_discardedMsg state > 0) ("discarded: " <> show (_discardedMsg state))
         whenStr p str = if p then str <> " " else ""
-    say $ "Final result: " <> showResult finalResult <> " " <> info
+    say $ "Result: " <> showResult finalResult <> " " <> info
 
 receiveWorkerLoop :: Timestamp -> Int -> Int -> ReceiverState -> Process ()
 receiveWorkerLoop !showTime !nodesCount !maxBufferSize !state = do

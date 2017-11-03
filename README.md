@@ -115,7 +115,7 @@ On one slave node:
 ~/dev/ch-otp-task $ ch-otp-task master localhost 8081 --send-for=3 --wait-for=1
 Wed Nov  1 21:27:55 UTC 2017 pid://localhost:8081:0:8: Config: MasterConfig {_sendDuration = 3, _waitDuration = 1, _seed = 0, _msgDelay = 0, _msgBuffer = 500000, _timeToShow = 700000}
 Wed Nov  1 21:27:55 UTC 2017 pid://localhost:8081:0:8: Sending for 3 second(s)
-Wed Nov  1 21:27:58 UTC 2017 pid://127.0.0.1:8082:0:10: Final result: <206619, 1.0672638883080137e10> all-finished max-buffer: 2
+Wed Nov  1 21:27:58 UTC 2017 pid://127.0.0.1:8082:0:10: Result: <206619, 1.0672638883080137e10> all-finished max-buffer: 2
 Wed Nov  1 21:27:58 UTC 2017 pid://localhost:8081:0:8: Waiting for 1 second(s)
 [1]  + 57701 done       ch-otp-task slave 127.0.0.1 8082
 Wed Nov  1 21:28:01 UTC 2017 pid://localhost:8081:0:8: Slaves terminated
@@ -130,8 +130,8 @@ On two slave nodes:
 ~/dev/ch-otp-task $ ch-otp-task master localhost 8081 --send-for=3 --wait-for=1
 Wed Nov  1 23:26:45 UTC 2017 pid://localhost:8081:0:8: Config: MasterConfig {_sendDuration = 3, _waitDuration = 1, _seed = 0, _msgDelay = 0, _msgBuffer = 50000, _timeToShow = 700000}
 Wed Nov  1 23:26:45 UTC 2017 pid://localhost:8081:0:8: Sending for 3 second(s)
-Wed Nov  1 23:26:48 UTC 2017 pid://127.0.0.1:8083:0:10: Final result: <94492, 2.2371742255130634e9> all-finished max-buffer: 161
-Wed Nov  1 23:26:48 UTC 2017 pid://127.0.0.1:8082:0:10: Final result: <94492, 2.2371742255130634e9> all-finished max-buffer: 115
+Wed Nov  1 23:26:48 UTC 2017 pid://127.0.0.1:8083:0:10: Result: <94492, 2.2371742255130634e9> all-finished max-buffer: 161
+Wed Nov  1 23:26:48 UTC 2017 pid://127.0.0.1:8082:0:10: Result: <94492, 2.2371742255130634e9> all-finished max-buffer: 115
 Wed Nov  1 23:26:48 UTC 2017 pid://localhost:8081:0:8: Waiting for 1 second(s)
 [2]  + 60229 done       ch-otp-task slave 127.0.0.1 8083
 [1]  + 60198 done       ch-otp-task slave 127.0.0.1 8082
@@ -155,16 +155,16 @@ Fri Nov  3 00:06:32 UTC 2017 pid://127.0.0.1:8081:0:8: Config: MasterConfig
         {_sendDuration = 60, _waitDuration = 60, _seed = 12345, _msgDelay = 0, _msgBuffer = 50000, _timeToShow = 700000}
 Fri Nov  3 00:06:32 UTC 2017 pid://127.0.0.1:8081:0:8: Sending for 60 second(s)
 Fri Nov  3 00:07:32 UTC 2017 pid://127.0.0.1:8081:0:8: Waiting for 60 second(s)
-Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8089:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 1748
-Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8083:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 2751
-Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8085:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 3241
-Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8088:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 2630
-Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8086:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 1828
-Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8090:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 3533
-Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8082:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 3171
-Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8087:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 5229
-Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8084:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 3475
-Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8091:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 6051
+Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8089:0:10: Result: <303184, 2.2956470321157352e10> all-finished max-buffer: 1748
+Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8083:0:10: Result: <303184, 2.2956470321157352e10> all-finished max-buffer: 2751
+Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8085:0:10: Result: <303184, 2.2956470321157352e10> all-finished max-buffer: 3241
+Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8088:0:10: Result: <303184, 2.2956470321157352e10> all-finished max-buffer: 2630
+Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8086:0:10: Result: <303184, 2.2956470321157352e10> all-finished max-buffer: 1828
+Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8090:0:10: Result: <303184, 2.2956470321157352e10> all-finished max-buffer: 3533
+Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8082:0:10: Result: <303184, 2.2956470321157352e10> all-finished max-buffer: 3171
+Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8087:0:10: Result: <303184, 2.2956470321157352e10> all-finished max-buffer: 5229
+Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8084:0:10: Result: <303184, 2.2956470321157352e10> all-finished max-buffer: 3475
+Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8091:0:10: Result: <303184, 2.2956470321157352e10> all-finished max-buffer: 6051
 Fri Nov  3 00:08:34 UTC 2017 pid://127.0.0.1:8081:0:8: Slaves terminated
 ```
 
@@ -174,30 +174,30 @@ Thu Nov  2 23:54:17 UTC 2017 pid://127.0.0.1:8081:0:8: Config: MasterConfig
         {_sendDuration = 60, _waitDuration = 60, _seed = 12345, _msgDelay = 0, _msgBuffer = 50000, _timeToShow = 700000}
 Thu Nov  2 23:54:17 UTC 2017 pid://127.0.0.1:8081:0:8: Sending for 60 second(s)
 Thu Nov  2 23:55:17 UTC 2017 pid://127.0.0.1:8081:0:8: Waiting for 60 second(s)
-Thu Nov  2 23:55:17 UTC 2017 pid://127.0.0.1:8088:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 2362
-Thu Nov  2 23:55:17 UTC 2017 pid://127.0.0.1:8087:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 5618
-Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8086:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 4082
-Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8102:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 7308
-Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8096:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 3870
-Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8099:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 8263
-Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8085:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 5248
-Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8089:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 4259
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8094:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 4272
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8084:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 7232
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8103:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 8479
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8104:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 3514
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8095:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 9238
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8105:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 4254
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8093:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 3652
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8100:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 13690
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8091:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 6771
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8082:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 4409
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8092:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 8872
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8101:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 14197
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8083:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 5032
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8098:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 10819
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8097:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 15512
-Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8090:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 6307
+Thu Nov  2 23:55:17 UTC 2017 pid://127.0.0.1:8088:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 2362
+Thu Nov  2 23:55:17 UTC 2017 pid://127.0.0.1:8087:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 5618
+Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8086:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 4082
+Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8102:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 7308
+Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8096:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 3870
+Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8099:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 8263
+Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8085:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 5248
+Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8089:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 4259
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8094:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 4272
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8084:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 7232
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8103:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 8479
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8104:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 3514
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8095:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 9238
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8105:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 4254
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8093:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 3652
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8100:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 13690
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8091:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 6771
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8082:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 4409
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8092:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 8872
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8101:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 14197
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8083:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 5032
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8098:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 10819
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8097:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 15512
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8090:0:10: Result: <102178, 2.62343949038707e9> all-finished max-buffer: 6307
 Thu Nov  2 23:56:19 UTC 2017 pid://127.0.0.1:8081:0:8: Slaves terminated
 ```
 

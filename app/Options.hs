@@ -1,4 +1,6 @@
-module Options where
+module Options
+    ( optionsParser
+    ) where
 
 import           Protolude           hiding (option)
 
