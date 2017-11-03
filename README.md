@@ -83,9 +83,9 @@ The parameters `--send-for`, `--wait-for` and `--with-seed` are defined in the t
 ### 2.2 Additional options
 
 The remaining parameters for the `master` have following meaning:
-- `--msg-delay` - delay in microseconds before sender sends the message. It allows for throttling the speed of message generators. Defaults to 0. __Warning:__ for some reasons, in some circumstances the small but non-zero values can give unexpected behaviour and hang the system (on MacOS Sierra). Value `0` seems to be fine in most of the cases, but if not a value from a range at least `10000`-`100000` microseconds is recommended.
-- `--max-buffer-size` - the maximum size of the buffer in the receiver, in the number of messages. When the value of this buffer is exceeded the incoming messages will be ignored.
-- `--time-to-show` - this is the time in microseconds before the end of wait period. It's an absolute deadline to show the results of calculations, but in many cases the result will be calculated much quicker.
+- `--msg-delay` - delay in microseconds before sender sends the message. It allows for throttling the speed of message generators. Defaults to 0.
+- `--max-buffer-size` - the maximum size of the buffer in the receiver, in the number of messages. When the buffer is exceeded the incoming messages can be discarded if their timestamps are too old.
+- `--time-to-show` - this is a time in microseconds before the end of wait period. It's an absolute deadline to show the results of calculations, but in many cases the result will be calculated much quicker.
 
 
 ## 3 Running
@@ -151,61 +151,61 @@ Machine: MacBook Pro mid-2012, 2,7 GHz Intel Core i7 (4 cores), 16 GB 1600 MHz D
 
 10 nodes, 1 minute, no throttling
 ```
-Wed Nov  1 01:01:42 UTC 2017 pid://127.0.0.1:8081:0:8: Config:
-        {_sendDuration = 60, _waitDuration = 30, _seed = 12345, _msgDelay = 0, _msgBuffer = 500000, _timeToShow = 700000}
-Wed Nov  1 01:01:42 UTC 2017 pid://127.0.0.1:8081:0:8: Sending for 60 second(s)
-Wed Nov  1 01:02:42 UTC 2017 pid://127.0.0.1:8081:0:8: Waiting for 30 second(s)
-Wed Nov  1 01:02:42 UTC 2017 pid://127.0.0.1:8084:0:10: Final result: <281243, 1.9754308654369343e10> all-finished max-buffer: 1544
-Wed Nov  1 01:02:43 UTC 2017 pid://127.0.0.1:8087:0:10: Final result: <281243, 1.9754308654369343e10> all-finished max-buffer: 3479
-Wed Nov  1 01:02:44 UTC 2017 pid://127.0.0.1:8083:0:10: Final result: <281243, 1.9754308654369343e10> all-finished max-buffer: 6320
-Wed Nov  1 01:02:44 UTC 2017 pid://127.0.0.1:8088:0:10: Final result: <281243, 1.9754308654369343e10> all-finished max-buffer: 6558
-Wed Nov  1 01:02:44 UTC 2017 pid://127.0.0.1:8089:0:10: Final result: <281243, 1.9754308654369343e10> all-finished max-buffer: 4559
-Wed Nov  1 01:02:44 UTC 2017 pid://127.0.0.1:8090:0:10: Final result: <281243, 1.9754308654369343e10> all-finished max-buffer: 3824
-Wed Nov  1 01:02:44 UTC 2017 pid://127.0.0.1:8085:0:10: Final result: <281243, 1.9754308654369343e10> all-finished max-buffer: 6199
-Wed Nov  1 01:02:44 UTC 2017 pid://127.0.0.1:8086:0:10: Final result: <281243, 1.9754308654369343e10> all-finished max-buffer: 3345
-Wed Nov  1 01:02:44 UTC 2017 pid://127.0.0.1:8091:0:10: Final result: <281243, 1.9754308654369343e10> all-finished max-buffer: 5800
-Wed Nov  1 01:02:44 UTC 2017 pid://127.0.0.1:8082:0:10: Final result: <281243, 1.9754308654369343e10> all-finished max-buffer: 5289
-Wed Nov  1 01:03:14 UTC 2017 pid://127.0.0.1:8081:0:8: Slaves terminated
+Fri Nov  3 00:06:32 UTC 2017 pid://127.0.0.1:8081:0:8: Config: MasterConfig
+        {_sendDuration = 60, _waitDuration = 60, _seed = 12345, _msgDelay = 0, _msgBuffer = 50000, _timeToShow = 700000}
+Fri Nov  3 00:06:32 UTC 2017 pid://127.0.0.1:8081:0:8: Sending for 60 second(s)
+Fri Nov  3 00:07:32 UTC 2017 pid://127.0.0.1:8081:0:8: Waiting for 60 second(s)
+Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8089:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 1748
+Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8083:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 2751
+Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8085:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 3241
+Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8088:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 2630
+Fri Nov  3 00:07:34 UTC 2017 pid://127.0.0.1:8086:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 1828
+Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8090:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 3533
+Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8082:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 3171
+Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8087:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 5229
+Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8084:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 3475
+Fri Nov  3 00:07:35 UTC 2017 pid://127.0.0.1:8091:0:10: Final result: <303184, 2.2956470321157352e10> all-finished max-buffer: 6051
+Fri Nov  3 00:08:34 UTC 2017 pid://127.0.0.1:8081:0:8: Slaves terminated
 ```
 
 24 nodes, 1 minute, no throttling
 ```
-Wed Nov  1 00:53:57 UTC 2017 pid://127.0.0.1:8081:0:8: Config: MasterConfig
-        {_sendDuration = 60, _waitDuration = 30, _seed = 12345, _msgDelay = 0, _msgBuffer = 500000, _timeToShow = 700000}
-Wed Nov  1 00:53:57 UTC 2017 pid://127.0.0.1:8081:0:8: Sending for 60 second(s)
-Wed Nov  1 00:54:57 UTC 2017 pid://127.0.0.1:8081:0:8: Waiting for 30 second(s)
-Wed Nov  1 00:54:57 UTC 2017 pid://127.0.0.1:8088:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 6298
-Wed Nov  1 00:54:57 UTC 2017 pid://127.0.0.1:8099:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 3247
-Wed Nov  1 00:54:57 UTC 2017 pid://127.0.0.1:8089:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 3738
-Wed Nov  1 00:54:57 UTC 2017 pid://127.0.0.1:8105:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 6129
-Wed Nov  1 00:54:57 UTC 2017 pid://127.0.0.1:8083:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 6606
-Wed Nov  1 00:54:58 UTC 2017 pid://127.0.0.1:8090:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 5396
-Wed Nov  1 00:54:58 UTC 2017 pid://127.0.0.1:8085:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 5638
-Wed Nov  1 00:54:59 UTC 2017 pid://127.0.0.1:8094:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 4402
-Wed Nov  1 00:54:59 UTC 2017 pid://127.0.0.1:8101:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 6303
-Wed Nov  1 00:54:59 UTC 2017 pid://127.0.0.1:8095:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 10893
-Wed Nov  1 00:54:59 UTC 2017 pid://127.0.0.1:8093:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 10964
-Wed Nov  1 00:54:59 UTC 2017 pid://127.0.0.1:8087:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 8760
-Wed Nov  1 00:55:00 UTC 2017 pid://127.0.0.1:8102:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 6947
-Wed Nov  1 00:55:00 UTC 2017 pid://127.0.0.1:8086:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 7767
-Wed Nov  1 00:55:00 UTC 2017 pid://127.0.0.1:8098:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 7124
-Wed Nov  1 00:55:00 UTC 2017 pid://127.0.0.1:8104:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 5128
-Wed Nov  1 00:55:00 UTC 2017 pid://127.0.0.1:8091:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 12230
-Wed Nov  1 00:55:00 UTC 2017 pid://127.0.0.1:8100:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 10766
-Wed Nov  1 00:55:00 UTC 2017 pid://127.0.0.1:8103:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 6856
-Wed Nov  1 00:55:00 UTC 2017 pid://127.0.0.1:8084:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 15342
-Wed Nov  1 00:55:00 UTC 2017 pid://127.0.0.1:8092:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 13915
-Wed Nov  1 00:55:00 UTC 2017 pid://127.0.0.1:8097:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 13585
-Wed Nov  1 00:55:00 UTC 2017 pid://127.0.0.1:8082:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 14715
-Wed Nov  1 00:55:00 UTC 2017 pid://127.0.0.1:8096:0:10: Final result: <96516, 2.3380171779276013e9> all-finished max-buffer: 12824
-Wed Nov  1 00:55:29 UTC 2017 pid://127.0.0.1:8081:0:8: Slaves terminated
+Thu Nov  2 23:54:17 UTC 2017 pid://127.0.0.1:8081:0:8: Config: MasterConfig
+        {_sendDuration = 60, _waitDuration = 60, _seed = 12345, _msgDelay = 0, _msgBuffer = 50000, _timeToShow = 700000}
+Thu Nov  2 23:54:17 UTC 2017 pid://127.0.0.1:8081:0:8: Sending for 60 second(s)
+Thu Nov  2 23:55:17 UTC 2017 pid://127.0.0.1:8081:0:8: Waiting for 60 second(s)
+Thu Nov  2 23:55:17 UTC 2017 pid://127.0.0.1:8088:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 2362
+Thu Nov  2 23:55:17 UTC 2017 pid://127.0.0.1:8087:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 5618
+Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8086:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 4082
+Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8102:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 7308
+Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8096:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 3870
+Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8099:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 8263
+Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8085:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 5248
+Thu Nov  2 23:55:18 UTC 2017 pid://127.0.0.1:8089:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 4259
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8094:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 4272
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8084:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 7232
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8103:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 8479
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8104:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 3514
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8095:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 9238
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8105:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 4254
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8093:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 3652
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8100:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 13690
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8091:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 6771
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8082:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 4409
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8092:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 8872
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8101:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 14197
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8083:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 5032
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8098:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 10819
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8097:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 15512
+Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8090:0:10: Final result: <102178, 2.62343949038707e9> all-finished max-buffer: 6307
+Thu Nov  2 23:56:19 UTC 2017 pid://127.0.0.1:8081:0:8: Slaves terminated
 ```
 
 ## 4 Implementation
 
 ### 4.1 Short description
 
-Master node runs and synchronizes the start of worker processes on slave nodes. The worker nodes have two processes each, one for sending, and the other one for receiving the messages and calculating the results. Together with the random value a timestamp is passed in the message. A receiver will store the messages in priority queue which acts as a buffer in order to achieve the correct ordering by timestamps. The messages with minimal timestamps (the oldests) are taken out of the queue in order to calculate the required sum online. This avoids the space leaks. When all the senders are done they inform receivers about it and the receivers calculate the remaining part of the sum from all the remaining messages from the queue. After that they display the results, but if there is an absolute timeout (risk of being killed) they display the result earlier.
+Master node runs and synchronizes the start of worker processes on slave nodes. The worker nodes have two processes each, one for sending, and the other one for receiving the messages and calculating the results. Together with the random value a timestamp is passed in the message. A receiver will store the messages in priority queue which acts as a buffer in order to achieve the correct ordering by timestamps. The messages with minimal timestamps (the oldests) are taken out of the queue in order to calculate the required sum online. This avoids the space leaks. When all the senders are done they inform receivers about it and the receivers calculate the remaining part of the sum from all the remaining messages in the queue. After that they display the results, but if there is an absolute timeout (risk of being killed) they display the result earlier.
 
 ### 4.2 Long description
 
@@ -243,7 +243,7 @@ As mentioned above the message contains a random value, timestamp and node id. T
 
 In the next step the new message is put to the priority queue which plays the role of buffer. In order to do that the size of the buffer is checked against the maximum allowed.
 
-If the size reaches the limit, the smallest value from the priority queue is taken using classic `minView` operation (O(log n) complexity, where n is the size of the queue). The priority queue uses a pair (timestamp, node id) for ordering of the values. Node id is used here to break ties, because the resolution of the clocks is limited. It's also suggested in the paper "Time, Clocks, and the Ordering of Events in a Distributed System" by Leslie Lamport (p. 561) to use any arbitraty total ordering of processes to break ties. If that minimum value from the queue has lower timestamp (with node id) that the new message the new partial sum is calculated using that value, and the new message is inserted into the queue (again O(log n) complexity - note that in general when the sorting/order is demanded we can't go better than O(log n) anyway).
+If the size reaches the limit, the smallest value from the priority queue is taken using `minView` operation (O(log n) complexity, where n is the size of the queue - it may depend on the final implementation used). The priority queue uses a pair (timestamp, node id) for ordering of the values. Node id is used here to break ties, because the resolution of the clocks is limited. It's also suggested in the paper "Time, Clocks, and the Ordering of Events in a Distributed System" by Leslie Lamport (p. 561) to use any arbitraty total ordering of processes to break ties. If that minimum value from the queue has lower timestamp (with node id) that the new message the new partial sum is calculated using that value, and the new message is inserted into the queue (again O(log n) complexity - note that in general when the sorting/order is demanded we can't go better than O(log n) anyway). If the timestamp of newly arrived message is lower than a timestamp of the last message taken into sum calculation - it means that to keep correctness we need to discard that message altogether. The counter of discarded messages is incremented for diagnostic purposes.
 
 If the size does not yet reach the limit the new message is simply put into the priority queue. Then the optimization of the queue is performed. Because the messages from the same sender arrive in order (see the link above), then taking the minimum of all timestamps from the last timestamps from all the nodes gives the bottom limit of the timestamps we can expect in the future (the proof is trivial). That means that we can take out from the queue all the messages with lower timestamps than the minimum of all latest timestamps. Therefore the reduce step is performed recursively in order to progress the calculation of the result sum and make the size of the queue smaller (perhaps there is a space for some constant time optimization here). After the reducing step is performed we are sure that there are no unecessary messages in the queue and that the result sum is calculated online and never postponed.
 
@@ -255,15 +255,15 @@ There are two stop conditions:
 
 In both cases the sender calculates the result using the partial sum it already calculated online and the remaining messages from the queue buffer. Then displays the final result and exits.
 
-The displayed result may contain the message `all-finished` when the "stop" message was received from all worker or `timeout` when not all messages have been processed but there is no time to wait before the deadline. Moreover the size of maximum buffer used during calculations is displayed.
+The displayed result may contain the message `all-finished` when the "stop" message was received from all worker or `timeout` when not all messages have been processed but there is no time to wait before the deadline. Moreover the size of maximum buffer used during calculations is displayed. If any message has been discarded while running the system - the number of discarded messages is additinally displayed.
 
 ##### Implementation decisions
 
 1. The latest timestamps for all nodes are kept in the hash map using `Data.HashMap.Strict` from `unordered-containers` library which uses hash array mapped tries and claimes to have better performance than other maps. Actually anything could be used here, because the performance of this data structure is not critical. There is no even need for the map, as the list of nodes is static - ordinary `Vector` could work equally good.
 
-2. The buffer is implemented using priority queue, exactly using `Data.HashPSQ` priority search queue from `psqueues` library which uses `IntPSQ` as a base and `OrdPSQ` to solve colisions. `IntPSQ` uses radix tree with additional min-heap property. The library claims to be the fastest implementation priority queue for Haskell and shows some benchmarks to illustrate that. However using the priority queue is actually questionable, even though it seems to be very natural in this application. Perhaps other kind of structures providing O(log n) insertion or O(log n) removing smallest operations would work equally well, but would give smaller memory hit.
+2. The buffer is implemented using priority queue, exactly using `Data.HashPSQ` priority search queue from `psqueues` library which uses `IntPSQ` as a base and `OrdPSQ` to solve collisions. `IntPSQ` uses radix tree with additional min-heap property. Simple `OrdPSQ` has also been checked and gave similar results. The library claims to be the fastest implementation priority queue for Haskell and shows some benchmarks to illustrate that. However using the priority queue is actually questionable, even though it seems to be very natural in this application. Perhaps other kind of structures providing O(log n) insertion or O(log n) removing smallest operations would work equally well, but would give smaller memory hit. Also reducing the buffer step could be performed in batch using another structure.
 
-3. Terminating all slaves takes significant amount of time. I can't find the reason of that other than a way `distributed-process` library handles it. Therefor the `run.sh' script contains additional `killall -9` command.
+3. Terminating all slaves takes significant amount of time. I can't find the reason of that other than a way `distributed-process` library handles it. Therefore the `run.sh` script contains additional `killall -9` command.
 
 ### 4.3 Conclusions and concerns
 
@@ -272,9 +272,8 @@ It seems that the problem can't be solved in general without additional assumpti
 ### 4.4 TODO list
 
 1. Add protection against incorrect setups, for example with nodes started on "busy" ports.
-2. Check the suspicious behaviour (hanging system) in some rare cases for small delay times - possibly a bug in High Sierra or distributed-process itself.
+2. Check the suspicious behaviour (hanging system) in some very rare cases for small delay times - possibly a bug in High Sierra or distributed-process itself (currently can't reproduce the problem).
 3. Terminating all slaves takes significant amount of time - investigate.
-4. Clean up, rething strictness annotations (bang patterns).
 
 ### 4.5 Ideas:
 - The system is now designed with possible delays in mind. Make it possible to work well with permanent failures of nodes or processes.
@@ -285,8 +284,6 @@ It seems that the problem can't be solved in general without additional assumpti
 - Refactor to be able to easily abstract over data structures and relevand algorithms used.
 - Use `lens` library for accessing and update'ing data structures.
 - Add CPU/memory benchmarks for various data structures and algorithms for the buffer, and after that use the best performing implementations.
-
-
 
 ## 5 Questions
 

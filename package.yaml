@@ -21,6 +21,7 @@ dependencies:
 - binary-orphans
 - distributed-process
 - distributed-process-simplelocalnet
+- network-transport
 default-extensions:
 - NoImplicitPrelude
 - OverloadedStrings
