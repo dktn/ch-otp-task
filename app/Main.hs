@@ -23,7 +23,9 @@ sanitazeConfig masterConfig =
 run :: Options -> IO ()
 run (MasterOptions hostConfig origMasterConfig) = do
     backend <- initializeBackend (toS $ _host hostConfig) (toS $ _port hostConfig) remoteTable
-    startMaster backend (master backend $ sanitazeConfig origMasterConfig)
+    let masterConfig = sanitazeConfig origMasterConfig
+    putText "Starting master"
+    startMaster backend (master backend masterConfig)
 run (SlaveOptions hostConfig) = do
     backend <- initializeBackend (toS $ _host hostConfig) (toS $ _port hostConfig) remoteTable
     startSlave backend

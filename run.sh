@@ -29,6 +29,7 @@ run_nodes () {
 
 run_master () {
     echo "$prefix Starting master"
+    # Beware! With latency network enabled the --msg-delay should be at last 100-500 microseconds
     ch-otp-task master 127.0.0.1 8081 --send-for=$send_for --wait-for=$wait_for --with-seed=$seed --msg-delay=0 --max-buffer-size=50000 --time-to-show=700000 &
     sleep $(expr $send_for + $wait_for + $wait_killall_for)
     echo "$prefix Killing all processes"

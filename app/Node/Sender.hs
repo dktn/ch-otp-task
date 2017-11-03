@@ -5,7 +5,7 @@ module Node.Sender
 
 import           Protolude                   hiding (state)
 
-import           Control.Distributed.Process (NodeId, Process, expect, getSelfPid, processNodeId, register)
+import           Control.Distributed.Process (NodeId, Process, expect, getSelfPid, processNodeId, register, say)
 import           System.Random               (StdGen, randomR)
 
 import           Node.Common
@@ -32,5 +32,6 @@ sendWorker stopTime gen msgDelay nodeIds = do
     let selfNid = processNodeId selfPid
     register senderService selfPid
     waitForStart
+    say "Start sending"
     sendNumbersLoop selfNid stopTime gen nodeIds msgDelay
     sendStop nodeIds

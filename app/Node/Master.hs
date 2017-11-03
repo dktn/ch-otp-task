@@ -66,11 +66,15 @@ waitAndTerminate backend masterConfig@MasterConfig { _sendDuration = sendDuratio
 
 master :: Backend -> MasterConfig -> [NodeId] -> Process ()
 master backend masterConfig nodeIds = do
+    say "Master started"
     masterPid <- getSelfPid
     let masterNodeId = processNodeId masterPid
     register masterService masterPid
+    say "Spawning all workers"
     spawnAllNodes masterConfig masterNodeId nodeIds
+    say "Waiting for all nodes to be ready"
     waitForAllNodes $ length nodeIds
+    say "Sending Start command to senders"
     broadcastToAll senderService Start nodeIds
     waitAndTerminate backend masterConfig
 
