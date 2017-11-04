@@ -36,6 +36,6 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
-    - -O1 # O2
+    - -O2
     dependencies:
     - base

@@ -201,6 +201,19 @@ Thu Nov  2 23:55:19 UTC 2017 pid://127.0.0.1:8090:0:10: Result: <102178, 2.62343
 Thu Nov  2 23:56:19 UTC 2017 pid://127.0.0.1:8081:0:8: Slaves terminated
 ```
 
+### 3.4 Testing
+
+In order to test the system is network delays scenarios I used `pfctl` tool (Packet Filter ConTroL), `dnctl` (DummyNet ConTroL) and `dummynet` traffic shaper available on macOS. The usage of these tools has been wrapped up in a script `latency_network.sh`. The parameters of the script are editable directly in the script and self-explanatory, for example `sudo dnctl pipe 1 config delay 5` sets up 5ms delay on `pipe 1` and `dummynet in  quick proto tcp from any to any port 8081 pipe 1` uses that defined pipe to control `input` traffic on the port `8081`.
+
+To enable network with latency simulation run `./latency_network.sh`, do disable it run `./latency_network.sh disable`.
+
+The tests proved that the system generally calculates correct values even in a scenario with different delays for each node.
+There are however some concerns that must be taken into account:
+1. The latency on master node is critical for effectiveness of startup.
+2. Since master automatically discovers the slave nodes and certain round trips are necessary with each node the startup will be more time consuming given non-zero delays for some nodes and `send-for` time should be set appropriately high.
+
+
+
 ## 4 Implementation
 
 ### 4.1 Short description
@@ -272,8 +285,7 @@ It seems that the problem can't be solved in general without additional assumpti
 ### 4.4 TODO list
 
 1. Add protection against incorrect setups, for example with nodes started on "busy" ports.
-2. Check the suspicious behaviour (hanging system) in some very rare cases for small delay times - possibly a bug in High Sierra or distributed-process itself (currently can't reproduce the problem).
-3. Terminating all slaves takes significant amount of time - investigate.
+2. Terminating all slaves takes significant amount of time - investigate.
 
 ### 4.5 Ideas:
 - The system is now designed with possible delays in mind. Make it possible to work well with permanent failures of nodes or processes.
@@ -281,7 +293,7 @@ It seems that the problem can't be solved in general without additional assumpti
 - Currently the peer discovery is not necessary. However the solution would be more general if the worker nodes didn't have to be informed by the list of other accessible nodes but they could find out that list automaticaly by exchanging the partial information of the network between each other.
 - The messages may be lost. Currently there is no check if there is a continuity of messages from a given sender. Such a check could be added and the receivers could possibly ask to resend messages. In this case the senders should also have a buffer. Note: this complicates the buffer optimization technique.
 - Buffer is limited by its size, so by memory. Perhaps taking some trade-offs into consideration it would be better to limit the buffer by the time span between the oldest and the newest message it handles. However in this case there is a risk that it can take significant amount of memory, especially when there are many nodes and the sending rate is high.
-- Refactor to be able to easily abstract over data structures and relevand algorithms used.
+- Refactor with typeclasses some parts of the receiver to be able to easily abstract over data structures and relevand algorithms used.
 - Use `lens` library for accessing and update'ing data structures.
 - Add CPU/memory benchmarks for various data structures and algorithms for the buffer, and after that use the best performing implementations.
 
