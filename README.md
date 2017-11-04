@@ -294,7 +294,7 @@ It seems that the problem can't be solved in general without additional assumpti
 - The messages may be lost. Currently there is no check if there is a continuity of messages from a given sender. Such a check could be added and the receivers could possibly ask to resend messages. In this case the senders should also have a buffer. Note: this complicates the buffer optimization technique.
 - Buffer is limited by its size, so by memory. Perhaps taking some trade-offs into consideration it would be better to limit the buffer by the time span between the oldest and the newest message it handles. However in this case there is a risk that it can take significant amount of memory, especially when there are many nodes and the sending rate is high.
 - Refactor with typeclasses some parts of the receiver to be able to easily abstract over data structures and relevand algorithms used.
-- Use `lens` library for accessing and update'ing data structures.
+- Use `lens` library for accessing and update'ing data structures. The naming convention for data types in accessors is already prepared for that by using underscore as a prefix.
 - Add CPU/memory benchmarks for various data structures and algorithms for the buffer, and after that use the best performing implementations.
 
 ## 5 Questions

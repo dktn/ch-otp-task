@@ -121,7 +121,7 @@ handleFinishedMessage !state Finished = do
 calculateSumFromPQueue :: ValuePQueue -> Result -> Result
 calculateSumFromPQueue !pq !partialResult = foldl' addNewVal partialResult vals
   where
-    !vals = fmap (\(_, !nts, !v) -> (v, nts)) $ sortBy (comparing (\(_, nts, _) -> nts)) $ PQ.toList pq -- TODO: optimize
+    !vals = fmap (\(_, !nts, !v) -> (v, nts)) $ sortBy (comparing (\(_, nts, _) -> nts)) $ PQ.toList pq
     addNewVal result (val, newNodeTs) = addValToResult result val newNodeTs
 
 calcResult :: Timestamp -> Timestamp -> Int -> ReceiverState -> Process ()
